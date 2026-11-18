@@ -1,0 +1,20 @@
+{
+  "notebook": "Kitchen renovation",
+  "notes": [
+    {
+      "id": "n1",
+      "title": "Measurements",
+      "body": "Back wall 3.4 m. Window centre 1.1 m from left corner.",
+      "created": "2026-10-28T19:12:00Z",
+      "tags": ["layout"]
+    },
+    {
+      "id": "n2",
+      "title": "Floor plan sketch",
+      "body": "Island goes where the old table was. See attachment.",
+      "created": "2026-10-30T08:40:00Z",
+      "tags": ["layout", "island"],
+      "attachments": ["sketch"]
+    }
+  ]
+}

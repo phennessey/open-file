@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Weather reading",
+  "type": "object",
+  "required": ["station", "time"],
+  "properties": {
+    "station": { "type": "string", "description": "Station id from stations.csv" },
+    "time": { "type": "string", "format": "date-time" },
+    "temp_c": { "type": ["number", "null"], "description": "Air temperature, degrees Celsius" },
+    "humidity_pct": { "type": ["integer", "null"], "minimum": 0, "maximum": 100 },
+    "pressure_hpa": { "type": ["number", "null"], "description": "Station pressure, hectopascals" }
+  },
+  "additionalProperties": false
+}

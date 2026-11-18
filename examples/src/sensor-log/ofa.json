@@ -1,0 +1,52 @@
+{
+  "ofa": "0.1",
+  "id": "urn:uuid:5f0c2b1e-8a0e-4d0b-9c55-6a3f6f1b2c10",
+  "title": "Rooftop weather stations, 1 November 2026",
+  "created": "2026-11-02T08:00:00Z",
+  "generator": { "name": "ofa.py", "version": "0.1.0" },
+  "primary": "readings",
+  "lang": "en",
+  "metadata": { "creator": "Example Weather Club", "license": "CC-BY-4.0" },
+  "streams": [
+    {
+      "id": "readings",
+      "path": "data/readings.ndjson.gz",
+      "source": "raw/readings.ndjson",
+      "media_type": "application/x-ndjson",
+      "content_encoding": ["gzip"],
+      "schema": { "type": "json-schema", "stream": "reading-schema" }
+    },
+    {
+      "id": "stations",
+      "path": "data/stations.csv",
+      "media_type": "text/csv; header=present",
+      "schema": { "type": "table-schema", "stream": "stations-schema" }
+    },
+    {
+      "id": "reading-schema",
+      "path": "schemas/reading.schema.json",
+      "media_type": "application/schema+json",
+      "role": "schema",
+      "describes": ["readings"]
+    },
+    {
+      "id": "stations-schema",
+      "path": "schemas/stations.table.json",
+      "media_type": "application/json",
+      "role": "schema",
+      "describes": ["stations"]
+    },
+    {
+      "id": "readme",
+      "path": "README.md",
+      "media_type": "text/markdown; charset=utf-8",
+      "role": "documentation"
+    },
+    {
+      "id": "license",
+      "path": "meta/LICENSE.txt",
+      "media_type": "text/plain; charset=utf-8",
+      "role": "license"
+    }
+  ]
+}

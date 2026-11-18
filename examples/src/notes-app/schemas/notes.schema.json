@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "quicknotes notebook",
+  "$ref": "#/$defs/notebook",
+  "$defs": {
+    "notebook": {
+      "type": "object",
+      "required": ["notebook", "notes"],
+      "properties": {
+        "notebook": { "type": "string", "description": "Notebook name" },
+        "notes": { "type": "array", "items": { "$ref": "#/$defs/note" } }
+      }
+    },
+    "note": {
+      "type": "object",
+      "required": ["id", "title", "body", "created"],
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "body": { "type": "string", "description": "Plain text" },
+        "created": { "type": "string", "format": "date-time" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "attachments": {
+          "type": "array",
+          "description": "Stream ids of attachments in the same package",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  }
+}
