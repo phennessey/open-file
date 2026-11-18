@@ -11,7 +11,7 @@ maintainers.
 - [ ] Register a domain for the project (for schema `$id` URIs and the macOS
       UTI). The JSON Schema currently uses `ofa-format.org` as a
       placeholder.
-- [ ] Replace the `LICENSE` notice with the full Apache 2.0 text.
+- [x] Replace the `LICENSE` notice with the full Apache 2.0 text.
 - [ ] Publish the repository on GitHub. Turn on Discussions and private
       vulnerability reporting.
 
