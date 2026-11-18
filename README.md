@@ -1,38 +1,31 @@
 # Open File Archive (OFA)
 
-**An open, self-describing package format.** One ZIP file, one JSON
-manifest, any number of data streams. Any program can open an `.ofa` file
-and list what is inside. A program that knows common formats such as JSON,
-CSV and PNG can read all of it, without format-specific code.
+**A universal file format for the AI programming age.**
+
+OFA is an open-source, self-describing package format. Any program can open
+an `.ofa` file and read what's inside it.
 
 Status: **draft 0.1**. The spec will change. Feedback welcome through issues
 and [RFCs](rfcs/).
 
 ## Why this exists
 
-You can now ask an AI assistant for a small tool and get one in minutes: a
-note keeper, a lab logger, a budget tracker. Each tool needs to save
-something, and each one invents a file format to do it. Some reach for JSON,
-some for SQLite, some for a ZIP with an ad-hoc layout and a made-up
-extension. A year later nobody remembers what `.qnotes` contains, the tool
-that wrote it is gone, and the data is stuck.
+We're seeing an explosion of AI-assisted apps and tools, and each one invents
+its own file format. Without a universal standard, we'll be buried in
+incompatible file types.
 
-The cost of writing software has dropped. The cost of a new file format has
-not: every new format needs documentation, readers in other languages,
-validation and a plan for old versions. Most tools skip all of that.
-
-OFA gives those tools a default. Instead of inventing a format, a tool
-writes an OFA package:
+OFA is a new philosophy. Instead of inventing a format, a tool writes an OFA
+package:
 
 - Its data goes in as ordinary files: JSON, CSV, PNG, Parquet, whatever fits.
-- A manifest, `ofa.json`, says what each file is, how it is compressed, and
+- A manifest, `ofa.json`, says what each file is, how it's compressed, and
   which schema describes it.
 - The schemas go inside the package too.
 
-Another program, or another AI-generated tool, or you with `unzip` and a text
-editor, can open the package and understand it. The manifest holds what an
-LLM or a human needs to write a reader: media types, schemas and roles,
-in a form you can read on one screen.
+Another AI-built tool can open the package and understand it. So can any
+other program, or a person with `unzip` and a text editor. The manifest holds
+what an LLM or a human needs to write a reader: media types, schemas and
+roles, all in digestible form.
 
 ## What it looks like
 
