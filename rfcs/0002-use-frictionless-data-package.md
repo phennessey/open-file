@@ -1,7 +1,8 @@
 # RFC 0002: Use Frictionless Data Package as the manifest
 
-- Status: **Proposed**
+- Status: **Accepted**
 - Created: 2026-11-18
+- Accepted: 2026-11-18
 - Affects: SPEC.md sections 4, 5, 6.1, 8, 9, 10 and Appendix A; the JSON
   Schema; tools/ofa.py; the examples
 
@@ -252,6 +253,17 @@ The `sensor-log` example under this RFC:
 3. **Propose OFA's fields to Frictionless as a new Data Package profile
    upstream.** That could follow later. This RFC needs nothing from the
    Frictionless project except its published standard.
+
+## Decisions on the open questions
+
+When we accepted this RFC we settled questions 1 to 3 as follows. We still
+want the Frictionless community's view on question 1.
+
+- **Question 1:** `mediatype` names the decoded bytes, and writers SHOULD
+  give compressed files the usual extension of their coding (`.gz`, `.zst`,
+  `.br`). SPEC section 5.5.
+- **Question 2:** one `_ofa` object per descriptor.
+- **Question 3:** no inline `data`. Every resource is a ZIP entry.
 
 ## Open questions
 

@@ -20,8 +20,8 @@ maintainers.
 Priority follows "who writes the most new tools".
 
 1. **Python library** (`ofa` on PyPI). Turn `tools/ofa.py` into a package
-   with a reading API (`open`, `streams`, `read_decoded`, `validate`) and a
-   writing API that computes digests as it streams. Python is where data
+   with a reading API (`open`, `resources`, `read_decoded`, `validate`) and a
+   writing API that computes hashes as it writes. Python is where data
    people and AI-generated scripts live.
 2. **TypeScript library** (npm). Browser and Node. Lets web apps and
    Electron tools save `.ofa` files, and lets a web page inspect one with a
@@ -52,22 +52,23 @@ Each implementation states its conformance level (Inspect, Core, Extended).
       that an AI coding assistant can read to emit correct OFA writers.
       This directly targets the format-proliferation problem.
 - [ ] **A web inspector.** Static page, runs locally in the browser, lists
-      streams, renders JSON, CSV, Markdown and images, validates schemas.
+      resources, renders JSON, CSV, Markdown and images, validates schemas.
 - [ ] **`file(1)` / libmagic rule** and a **shared-mime-info** entry for
       Linux desktops, so `.ofa` files get an icon and a type.
 - [ ] **IANA registration** of `application/vnd.ofa+zip`, using the
       template in RFC 0001.
-- [ ] **Converters**: Frictionless Data Package to OFA and back, RO-Crate
+- [ ] **Converters**: a folder-based Data Package to OFA and back (mostly
+      adding hashes and zipping), RO-Crate
       zip to OFA and back, folder plus heuristics to OFA.
 
 ## 5. Communities to engage
 
 | Community | Why they care | First contact |
 |---|---|---|
-| Frictionless Data / Open Knowledge Foundation | Closest existing descriptor. Alignment avoids a competing standard. | Propose a mapping doc and ask for review. |
-| RO-Crate and research data managers | Need a single-file, verifiable package. | Show RO-Crate metadata carried as a stream. |
+| Frictionless Data / Open Knowledge Foundation | OFA's manifest is their Data Package (RFC 0002). Their review keeps OFA an extension of their work, not a rival. | Share RFC 0002 and ask how their tools should handle compressed resources. |
+| RO-Crate and research data managers | Need a single-file, verifiable package. | Show RO-Crate metadata carried as a resource. |
 | Library of Congress Sustainability of Digital Formats, UK National Archives (PRONOM), Digital Preservation Coalition | Format registries and preservation guidance. | Submit a PRONOM signature once the magic bytes are final. |
-| MCAP / Foxglove, Apache Arrow and Parquet maintainers | Their formats become OFA streams. Agree on media type names. | Ask about `application/avro` and Protobuf delimited naming. |
+| MCAP / Foxglove, Apache Arrow and Parquet maintainers | Their formats become OFA resources. Agree on media type names. | Ask about `application/avro` and Protobuf delimited naming. |
 | AI coding assistant and agent-framework builders | They decide what format a generated tool writes. | Ship the LLM-ready summary and a one-line "save as OFA" snippet per language. |
 | Local-first software community (Ink & Switch, Automerge users) | Care about data that outlives apps. | Talk at a meetup, ask what OFA misses for app save files. |
 | Jupyter and notebook tool authors | Notebooks plus data plus outputs fit the package model. | Prototype "export notebook with data as OFA". |
@@ -86,7 +87,7 @@ Each implementation states its conformance level (Inspect, Core, Extended).
 1. **Streaming and append.** ZIP writes its central directory last. Do we
    need a second profile for append-while-recording (EBML or an MCAP-style
    chunked layout), or is "put an MCAP stream inside" enough?
-2. **Large packages.** Should streams split across several entries
+2. **Large packages.** Should resources split across several entries
    (`parts`) for parallel writes and resumable uploads, or does ZIP64 cover
    real needs?
 3. **CBOR manifests.** Is a binary manifest worth a second parsing path? The

@@ -1,0 +1,60 @@
+{
+  "$schema": "https://ofa-format.org/profiles/0.2/datapackage.json",
+  "id": "urn:uuid:5f0c2b1e-8a0e-4d0b-9c55-6a3f6f1b2c10",
+  "title": "Rooftop weather stations, 1 November 2026",
+  "created": "2026-11-02T08:00:00Z",
+  "licenses": [{ "name": "CC-BY-4.0" }],
+  "contributors": [{ "title": "Example Weather Club", "roles": ["creator"] }],
+  "_ofa": {
+    "version": "0.2",
+    "generator": { "name": "ofa.py", "version": "0.2.0" },
+    "primary": "readings",
+    "lang": "en"
+  },
+  "resources": [
+    {
+      "name": "readings",
+      "path": "data/readings.ndjson.gz",
+      "source": "raw/readings.ndjson",
+      "mediatype": "application/x-ndjson",
+      "_ofa": {
+        "contentEncoding": ["gzip"],
+        "schema": { "type": "json-schema", "resource": "reading-schema" }
+      }
+    },
+    {
+      "name": "stations",
+      "type": "table",
+      "path": "data/stations.csv",
+      "mediatype": "text/csv",
+      "encoding": "utf-8",
+      "schema": "schemas/stations.table.json"
+    },
+    {
+      "name": "reading-schema",
+      "path": "schemas/reading.schema.json",
+      "mediatype": "application/schema+json",
+      "_ofa": { "role": "schema", "describes": ["readings"] }
+    },
+    {
+      "name": "stations-schema",
+      "path": "schemas/stations.table.json",
+      "mediatype": "application/json",
+      "_ofa": { "role": "schema", "describes": ["stations"] }
+    },
+    {
+      "name": "readme",
+      "path": "README.md",
+      "mediatype": "text/markdown",
+      "encoding": "utf-8",
+      "_ofa": { "role": "documentation" }
+    },
+    {
+      "name": "license",
+      "path": "meta/LICENSE.txt",
+      "mediatype": "text/plain",
+      "encoding": "utf-8",
+      "_ofa": { "role": "license" }
+    }
+  ]
+}

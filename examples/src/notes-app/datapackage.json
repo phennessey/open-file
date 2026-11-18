@@ -1,0 +1,43 @@
+{
+  "$schema": "https://ofa-format.org/profiles/0.2/datapackage.json",
+  "title": "Kitchen renovation notes",
+  "created": "2026-10-28T19:12:00Z",
+  "_ofa": {
+    "version": "0.2",
+    "modified": "2026-10-30T08:41:00Z",
+    "generator": { "name": "quicknotes", "version": "0.3.1" },
+    "primary": "notes",
+    "extensions": {
+      "app.quicknotes.ui": { "last_open_note": "n2", "theme": "dark" }
+    }
+  },
+  "resources": [
+    {
+      "name": "notes",
+      "path": "data/notes.json",
+      "mediatype": "application/json",
+      "_ofa": {
+        "schema": { "type": "json-schema", "resource": "notes-schema", "name": "#/$defs/notebook" }
+      }
+    },
+    {
+      "name": "notes-schema",
+      "path": "schemas/notes.schema.json",
+      "mediatype": "application/schema+json",
+      "_ofa": { "role": "schema", "describes": ["notes"] }
+    },
+    {
+      "name": "sketch",
+      "path": "data/attachments/sketch.png",
+      "mediatype": "image/png",
+      "title": "Floor plan sketch",
+      "_ofa": { "role": "attachment", "describes": ["notes"] }
+    },
+    {
+      "name": "thumb",
+      "path": "preview/thumbnail.png",
+      "mediatype": "image/png",
+      "_ofa": { "role": "thumbnail" }
+    }
+  ]
+}

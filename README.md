@@ -26,8 +26,10 @@ OFA is a new philosophy. Instead of inventing a format, a tool writes an OFA
 package:
 
 - Its data goes in as ordinary files: JSON, CSV, PNG, Parquet, whatever fits.
-- A manifest, `ofa.json`, says what each file is, how it's compressed, and
-  which schema describes it.
+- A manifest, `datapackage.json`, says what each file is, how it's
+  compressed, and which schema describes it. It's a standard
+  [Frictionless Data Package](https://datapackage.org/), so existing
+  Frictionless tools can read it.
 - The schemas go inside the package too.
 
 Another AI-built tool can open the package and understand it. So can any
@@ -40,7 +42,7 @@ roles, all in digestible form.
 ```
 notes-app.ofa
 ├── mimetype                     "application/vnd.ofa+zip"
-├── ofa.json                    the manifest
+├── datapackage.json             the manifest
 ├── data/notes.json              the notes
 ├── schemas/notes.schema.json    JSON Schema for the notes
 ├── data/attachments/sketch.png
@@ -49,39 +51,41 @@ notes-app.ofa
 
 ```json
 {
-  "ofa": "0.1",
+  "$schema": "https://ofa-format.org/profiles/0.2/datapackage.json",
   "title": "Kitchen renovation notes",
-  "primary": "notes",
-  "streams": [
+  "_ofa": { "version": "0.2", "primary": "notes" },
+  "resources": [
     {
-      "id": "notes",
+      "name": "notes",
       "path": "data/notes.json",
-      "media_type": "application/json",
-      "schema": { "type": "json-schema", "stream": "notes-schema" },
-      "size": 502,
-      "digest": "sha256:…"
+      "mediatype": "application/json",
+      "bytes": 502,
+      "hash": "sha256:…",
+      "_ofa": { "schema": { "type": "json-schema", "resource": "notes-schema" } }
     },
     {
-      "id": "notes-schema",
+      "name": "notes-schema",
       "path": "schemas/notes.schema.json",
-      "media_type": "application/schema+json",
-      "role": "schema",
-      "describes": ["notes"],
-      "size": 992,
-      "digest": "sha256:…"
+      "mediatype": "application/schema+json",
+      "bytes": 992,
+      "hash": "sha256:…",
+      "_ofa": { "role": "schema", "describes": ["notes"] }
     }
   ]
 }
 ```
+
+Everything outside `_ofa` is plain Data Package. The `_ofa` objects hold what
+OFA adds: compression, roles, links between files and the spec version.
 
 ## Design in five rules
 
 1. **Any program can list any package.** ZIP and JSON are all it takes.
 2. **Describe, don't execute.** Schemas, never code. Optional sandboxed
    decoders stay out of the default path.
-3. **Reuse what exists.** IANA media types, HTTP content codings, JSON
-   Schema, Avro, Protobuf, Frictionless Table Schema, SHA-256.
-4. **Every entry gets a digest.** Sign the manifest and you have signed the
+3. **Reuse what exists.** Frictionless Data Package, IANA media types, HTTP
+   content codings, JSON Schema, Avro, Protobuf, Table Schema, SHA-256.
+4. **Every entry gets a hash.** Sign the manifest and you have signed the
    package.
 5. **Ignore what you don't know**, unless the package says you must
    understand it.
@@ -103,7 +107,7 @@ python3 tools/ofa.py verify examples/sensor-log.ofa
 python3 tools/ofa.py cat examples/sensor-log.ofa readings
 ```
 
-Build your own from a folder containing a `ofa.json` template:
+Build your own from a folder containing a `datapackage.json` template:
 
 ```bash
 python3 tools/ofa.py pack examples/src/sensor-log my-log.ofa
@@ -112,7 +116,7 @@ python3 tools/ofa.py pack examples/src/sensor-log my-log.ofa
 No tool at all? Not a problem — it's just a ZIP file:
 
 ```bash
-unzip -p examples/sensor-log.ofa ofa.json
+unzip -p examples/sensor-log.ofa datapackage.json
 ```
 
 ## Repository layout
@@ -120,11 +124,11 @@ unzip -p examples/sensor-log.ofa ofa.json
 | Path | Contents |
 |---|---|
 | [`SPEC.md`](SPEC.md) | The living specification |
-| [`schema/`](schema/) | JSON Schema for `ofa.json` |
+| [`profiles/`](profiles/) | The OFA profile: a JSON Schema that extends the Data Package profile |
 | [`examples/`](examples/) | Sample packages and the folders they were built from |
 | [`tools/ofa.py`](tools/ofa.py) | Reference inspector, verifier and packer |
 | [`research/survey.md`](research/survey.md) | Survey of OPC, EPUB, JAR, RO-Crate, Avro, Matroska, MCAP, HDF5 and others |
-| [`rfcs/`](rfcs/) | Proposals for changes, including [RFC 0001](rfcs/0001-extension-and-media-type.md) on the name and extension |
+| [`rfcs/`](rfcs/) | Proposals for changes, including [RFC 0001](rfcs/0001-extension-and-media-type.md) on the name and [RFC 0002](rfcs/0002-use-frictionless-data-package.md) on using Data Package |
 | [`NEXT_STEPS.md`](NEXT_STEPS.md) | Roadmap and open questions |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | How to propose changes |
 
@@ -135,25 +139,23 @@ data already has a good self-describing format, put that file in a package
 and let the manifest say what it is. OFA fills the gap for everything that
 currently ends up as an undocumented ZIP or a bespoke binary.
 
-### Why not Frictionless or RO-Crate?
+### Frictionless and RO-Crate
 
-We built on both.
-
-**[Frictionless Data Package](https://datapackage.org/)** is the closest
-thing to OFA, and the two overlap. Its `datapackage.json` lists each file
-with a path, media type, hash and schema, as `ofa.json` does. Frictionless
-tools can zip a package, but the standard doesn't define that ZIP: there's no
-file type, no media type and no rules for what goes inside. OFA defines the
-container, and adds per-file compression, roles and integrity checks. It
-borrows Frictionless field names and accepts its Table Schema. We're asking
-the Frictionless community whether OFA should become a container profile for
-Data Package rather than a separate descriptor.
+**[Frictionless Data Package](https://datapackage.org/)** already describes
+a set of data files well, so we use it as is. The manifest in every `.ofa`
+file is a standard `datapackage.json`, and any Frictionless tool can read
+it. What Data Package doesn't define is a single file to hold it all: no
+file type, no media type and no rules for what goes inside a ZIP. OFA adds
+that container, plus per-file compression, roles and integrity checks, in
+private `_ofa` properties that Data Package allows.
+[RFC 0002](rfcs/0002-use-frictionless-data-package.md) explains the
+details.
 
 **[RO-Crate](https://www.researchobject.org/ro-crate/)** describes research
 data: who made it, how and why, in JSON-LD. It doesn't tell a reader how to
-decode the bytes in each file, and a reader needs JSON-LD tooling just to
-list them. OFA handles decoding. If you need RO-Crate's richer metadata, put
-`ro-crate-metadata.json` inside the package as a `metadata` stream.
+decode the bytes in each file. OFA handles decoding. If you need RO-Crate's
+richer metadata, put `ro-crate-metadata.json` inside the package as a
+resource with the `metadata` role.
 
 The [survey](research/survey.md) explains what OFA borrows from each
 existing format.

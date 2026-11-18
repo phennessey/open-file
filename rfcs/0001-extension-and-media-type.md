@@ -54,8 +54,8 @@ The name gives every other identifier:
 | Format name | Open File Archive (OFA) |
 | Extension | `.ofa` |
 | Media type | `application/vnd.ofa+zip` |
-| Manifest entry | `ofa.json` |
-| Manifest field holding the spec version | `"ofa"` |
+| Manifest entry | `ofa.json` (replaced by `datapackage.json` in [RFC 0002](0002-use-frictionless-data-package.md)) |
+| Manifest field holding the spec version | `"ofa"` (now `_ofa.version`, RFC 0002) |
 | Reserved directory | `_ofa/` |
 | macOS Uniform Type Identifier | `org.ofa-format.archive` (placeholder until the project has a domain), conforming to `public.zip-archive` and `public.data` |
 
@@ -96,15 +96,15 @@ registration through a standards body takes years. The template:
 Type name: application
 Subtype name: vnd.ofa+zip
 Required parameters: none
-Optional parameters: version (the "ofa" manifest field, for example "0.1")
+Optional parameters: version (the manifest's "_ofa.version", for example "0.2")
 Encoding considerations: binary
 Security considerations: see SPEC.md section 14
 Interoperability considerations: see SPEC.md section 12
 Published specification: SPEC.md in the project repository
 Applications that use this media type: any program that reads or writes
   Open File Archive packages
-Fragment identifier considerations: "#stream=<id>" selects one stream
-  (SPEC.md section 6.3)
+Fragment identifier considerations: "#resource=<name>" selects one
+  resource (SPEC.md section 6.3)
 Magic number(s): "PK\x03\x04" at offset 0, the ASCII string "mimetype" at
   offset 30, and "application/vnd.ofa+zip" at offset 38
 File extension(s): .ofa

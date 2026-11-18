@@ -1,0 +1,13 @@
+{
+  "$schema": "https://ofa-format.org/profiles/0.2/datapackage.json",
+  "title": "Hello",
+  "_ofa": { "version": "0.2", "primary": "hello" },
+  "resources": [
+    {
+      "name": "hello",
+      "path": "hello.txt",
+      "mediatype": "text/plain",
+      "encoding": "utf-8"
+    }
+  ]
+}

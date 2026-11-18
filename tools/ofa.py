@@ -1,17 +1,21 @@
 #!/usr/bin/env python3
-"""ofa.py: reference inspector and packer for OFA packages (spec 0.1).
+"""ofa.py: reference inspector and packer for OFA packages (spec 0.2).
 
 Standard library only. Python 3.10 or later; zstd needs Python 3.14
 (compression.zstd) and brotli needs the third-party `brotli` module.
 
-    ofa.py ls      PACKAGE           list streams
-    ofa.py verify  PACKAGE           check container rules, manifest and digests
-    ofa.py cat     PACKAGE STREAM    write a stream's decoded bytes to stdout
-    ofa.py pack    SRC_DIR OUTPUT    build a package from a directory
+    ofa.py ls      PACKAGE             list resources
+    ofa.py verify  PACKAGE             check container rules, manifest and hashes
+    ofa.py cat     PACKAGE RESOURCE    write a resource's decoded bytes to stdout
+    ofa.py pack    SRC_DIR OUTPUT      build a package from a directory
 
-`pack` reads SRC_DIR/ofa.json as a template. For each stream it reads the
-file at `path` (or at `source`, then applies `content_encoding`), fills in
-`size` and `digest`, and writes a deterministic ZIP.
+The manifest is a Frictionless Data Package v2 descriptor, datapackage.json,
+with OFA's additions in private `_ofa` properties (RFC 0002).
+
+`pack` reads SRC_DIR/datapackage.json as a template. For each resource it
+reads the file at `path` (or at `source`, then applies
+`_ofa.contentEncoding`), fills in `bytes` and `hash`, and writes a
+deterministic ZIP.
 """
 
 from __future__ import annotations
@@ -29,9 +33,11 @@ import zlib
 from pathlib import Path
 
 MEDIA_TYPE = "application/vnd.ofa+zip"
-SPEC_VERSION = "0.1"
+SPEC_VERSION = "0.2"
+MANIFEST = "datapackage.json"
+PROFILE = "https://ofa-format.org/profiles/0.2/datapackage.json"
 FIXED_TIME = (1980, 1, 1, 0, 0, 0)
-STREAM_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
+RESOURCE_NAME = re.compile(r"^[a-z0-9][a-z0-9._-]{0,127}$")
 DIGEST = re.compile(r"^sha256:[0-9a-f]{64}$")
 RESERVED_PREFIXES = ("signatures/", "META-INF/", "_ofa/")
 MAX_MANIFEST = 16 * 1024 * 1024
@@ -187,9 +193,11 @@ class Package:
 
     # -- section 5
     def _read_manifest(self) -> dict:
-        info = self.entries.get("ofa.json")
+        info = self.entries.get(MANIFEST)
         if info is None:
-            raise OfaError("no ofa.json manifest")
+            raise OfaError(f"no {MANIFEST} manifest")
+        if len(self.zip.infolist()) < 2 or self.zip.infolist()[1].filename != MANIFEST:
+            self.errors.append(f"{MANIFEST} is not the second entry")
         if info.file_size > MAX_MANIFEST:
             raise OfaError("manifest larger than 16 MiB")
         raw = self.zip.read(info)
@@ -206,88 +214,112 @@ class Package:
 
     def _check_manifest(self):
         m = self.manifest
-        version = m.get("ofa")
+        if "$schema" not in m:
+            self.errors.append("'$schema' missing; it must name the OFA profile")
+        elif m["$schema"] != PROFILE:
+            self.warnings.append(f"'$schema' is {m['$schema']!r}; this tool knows {PROFILE}")
+        ofa = m.get("_ofa")
+        if not isinstance(ofa, dict):
+            self.errors.append("'_ofa' object missing")
+            ofa = {}
+        version = ofa.get("version")
         if not isinstance(version, str) or not re.match(r"^\d+\.\d+$", version):
-            self.errors.append("'ofa' version missing or malformed")
+            self.errors.append("'_ofa.version' missing or malformed")
         elif version != SPEC_VERSION:
             self.warnings.append(f"package uses spec {version}; this tool knows {SPEC_VERSION}. Listing only.")
-        streams = m.get("streams")
-        if not isinstance(streams, list) or not streams:
-            self.errors.append("'streams' must be a non-empty array")
-            streams = []
-        ids, paths = set(), set()
-        for i, s in enumerate(streams):
-            where = f"streams[{i}]"
-            if not isinstance(s, dict):
+        resources = m.get("resources")
+        if not isinstance(resources, list) or not resources:
+            self.errors.append("'resources' must be a non-empty array")
+            resources = []
+        names, paths = set(), set()
+        for i, r in enumerate(resources):
+            where = f"resources[{i}]"
+            if not isinstance(r, dict):
                 self.errors.append(f"{where} is not an object")
                 continue
-            for key in ("id", "path", "media_type", "size", "digest"):
-                if key not in s:
+            for key in ("name", "path", "mediatype", "bytes", "hash"):
+                if key not in r:
                     self.errors.append(f"{where} lacks '{key}'")
-            sid, path = s.get("id"), s.get("path")
-            if isinstance(sid, str):
-                if not STREAM_ID.match(sid):
-                    self.errors.append(f"{where}: bad id {sid!r}")
-                if sid in ids:
-                    self.errors.append(f"{where}: duplicate id {sid!r}")
-                ids.add(sid)
+            if "data" in r:
+                self.errors.append(f"{where}: inline 'data' is not allowed; every resource is a ZIP entry")
+            name, path = r.get("name"), r.get("path")
+            if isinstance(name, str):
+                if not RESOURCE_NAME.match(name):
+                    self.errors.append(f"{where}: bad name {name!r}")
+                if name in names:
+                    self.errors.append(f"{where}: duplicate name {name!r}")
+                names.add(name)
+            if "path" in r and not isinstance(path, str):
+                self.errors.append(f"{where}: 'path' must be a single string")
             if isinstance(path, str):
+                if "://" in path:
+                    self.errors.append(f"{where}: 'path' must not be a URL")
+                if any(seg.startswith(".") for seg in path.split("/")):
+                    self.errors.append(f"{where}: 'path' must not use hidden folders, '.' or '..'")
                 if path in paths:
                     self.errors.append(f"{where}: duplicate path {path!r}")
                 paths.add(path)
-                if path in ("mimetype", "ofa.json") or path.startswith(RESERVED_PREFIXES):
+                if path in ("mimetype", MANIFEST) or path.startswith(RESERVED_PREFIXES):
                     self.errors.append(f"{where}: path {path!r} is reserved")
                 if path not in self.entries:
-                    self.errors.append(f"stream {sid!r}: entry {path!r} not found")
-            if "digest" in s and not DIGEST.match(str(s["digest"])):
-                self.errors.append(f"{where}: digest must be sha256:<64 lowercase hex>")
-            if "size" in s and not (isinstance(s["size"], int) and s["size"] >= 0):
-                self.errors.append(f"{where}: size must be a non-negative integer")
-            sch = s.get("schema")
-            if sch is not None:
-                given = [k for k in ("stream", "inline", "uri") if k in sch]
-                if "type" not in sch or len(given) != 1:
-                    self.errors.append(f"{where}: schema needs 'type' and exactly one of stream/inline/uri")
-        for s in streams:
-            if not isinstance(s, dict):
+                    self.errors.append(f"resource {name!r}: entry {path!r} not found")
+            if "hash" in r and not DIGEST.match(str(r["hash"])):
+                self.errors.append(f"{where}: hash must be sha256:<64 lowercase hex>")
+            if "bytes" in r and not (isinstance(r["bytes"], int) and r["bytes"] >= 0):
+                self.errors.append(f"{where}: bytes must be a non-negative integer")
+            ext = r.get("_ofa", {})
+            if not isinstance(ext, dict):
+                self.errors.append(f"{where}: '_ofa' must be an object")
                 continue
-            refs = list(s.get("describes", []))
-            if isinstance(s.get("schema"), dict) and "stream" in s["schema"]:
-                refs.append(s["schema"]["stream"])
-            for r in refs:
-                if r not in ids:
-                    self.errors.append(f"stream {s.get('id')!r} refers to unknown stream {r!r}")
-        if "primary" in m and m["primary"] not in ids:
-            self.errors.append(f"primary {m['primary']!r} is not a stream id")
-        described = paths | {"mimetype", "ofa.json"}
-        for name in self.entries:
-            if name not in described and not name.startswith("signatures/"):
-                self.warnings.append(f"entry {name!r} is not described in the manifest; ignoring it")
-        unknown_required = [r for r in m.get("requires", [])]
+            sch = ext.get("schema")
+            if sch is not None:
+                given = [k for k in ("resource", "inline", "uri") if k in sch]
+                if "type" not in sch or len(given) != 1:
+                    self.errors.append(f"{where}: _ofa.schema needs 'type' and exactly one of resource/inline/uri")
+        for r in resources:
+            if not isinstance(r, dict) or not isinstance(r.get("_ofa", {}), dict):
+                continue
+            ext = r.get("_ofa", {})
+            refs = list(ext.get("describes", []))
+            if isinstance(ext.get("schema"), dict) and "resource" in ext["schema"]:
+                refs.append(ext["schema"]["resource"])
+            for ref in refs:
+                if ref not in names:
+                    self.errors.append(f"resource {r.get('name')!r} refers to unknown resource {ref!r}")
+            native = r.get("schema")
+            if isinstance(native, str) and native not in paths:
+                self.errors.append(f"resource {r.get('name')!r}: schema {native!r} is not a resource path in the package")
+        if "primary" in ofa and ofa["primary"] not in names:
+            self.errors.append(f"_ofa.primary {ofa['primary']!r} is not a resource name")
+        described = paths | {"mimetype", MANIFEST}
+        for entry in self.entries:
+            if entry not in described and not entry.startswith(("signatures/", "META-INF/")):
+                self.warnings.append(f"entry {entry!r} is not described in the manifest; ignoring it")
+        unknown_required = list(ofa.get("requires", []))
         if unknown_required:
             self.warnings.append("package requires extensions this tool does not implement: " + ", ".join(unknown_required))
 
     # -- section 7
-    def stream(self, sid: str) -> dict:
-        for s in self.manifest.get("streams", []):
-            if s.get("id") == sid:
-                return s
-        raise OfaError(f"no stream with id {sid!r}")
+    def resource(self, name: str) -> dict:
+        for r in self.manifest.get("resources", []):
+            if r.get("name") == name:
+                return r
+        raise OfaError(f"no resource named {name!r}")
 
-    def stored_bytes(self, s: dict) -> bytes:
-        size = s["size"]
-        with self.zip.open(s["path"]) as f:
+    def stored_bytes(self, r: dict) -> bytes:
+        size = r["bytes"]
+        with self.zip.open(r["path"]) as f:
             data = f.read(size + 1)
         if len(data) != size:
-            raise OfaError(f"stream {s['id']!r}: size {len(data)} differs from manifest {size}")
+            raise OfaError(f"resource {r['name']!r}: size {len(data)} differs from manifest {size}")
         digest = "sha256:" + hashlib.sha256(data).hexdigest()
-        if digest != s["digest"]:
-            raise OfaError(f"stream {s['id']!r}: digest mismatch")
+        if digest != r["hash"]:
+            raise OfaError(f"resource {r['name']!r}: hash mismatch")
         return data
 
-    def decoded_bytes(self, s: dict) -> bytes:
-        data = self.stored_bytes(s)
-        for coding in reversed(s.get("content_encoding", [])):
+    def decoded_bytes(self, r: dict) -> bytes:
+        data = self.stored_bytes(r)
+        for coding in reversed(r.get("_ofa", {}).get("contentEncoding", [])):
             data = decode(data, coding, max(len(data), 1) * MAX_RATIO)
         return data
 
@@ -297,16 +329,18 @@ class Package:
 def cmd_ls(args) -> int:
     pkg = Package(args.package)
     m = pkg.manifest
-    print(f"{args.package}  (ofa {m.get('ofa')})")
+    print(f"{args.package}  (ofa {m.get('_ofa', {}).get('version')})")
     if m.get("title"):
         print(f"title: {m['title']}")
     print(f"package digest: sha256:{hashlib.sha256(pkg.manifest_bytes).hexdigest()}")
-    rows = [("ID", "ROLE", "MEDIA TYPE", "CODING", "SIZE", "PATH")]
-    for s in m.get("streams", []):
-        mark = "*" if s.get("id") == m.get("primary") else ""
+    primary = m.get("_ofa", {}).get("primary")
+    rows = [("NAME", "ROLE", "MEDIA TYPE", "CODING", "BYTES", "PATH")]
+    for r in m.get("resources", []):
+        ext = r.get("_ofa", {})
+        mark = "*" if r.get("name") == primary else ""
         rows.append((
-            str(s.get("id")) + mark, s.get("role", "data"), s.get("media_type", "?"),
-            "+".join(s.get("content_encoding", [])) or "-", str(s.get("size", "?")), s.get("path", "?"),
+            str(r.get("name")) + mark, ext.get("role", "data"), r.get("mediatype", "?"),
+            "+".join(ext.get("contentEncoding", [])) or "-", str(r.get("bytes", "?")), r.get("path", "?"),
         ))
     widths = [max(len(r[i]) for r in rows) for i in range(len(rows[0]))]
     for r in rows:
@@ -321,17 +355,19 @@ def cmd_ls(args) -> int:
 def cmd_verify(args) -> int:
     pkg = Package(args.package)
     failures = list(pkg.errors)
-    for s in pkg.manifest.get("streams", []):
+    for r in pkg.manifest.get("resources", []):
         try:
-            data = pkg.decoded_bytes(s)
-            if s.get("media_type", "").split(";")[0].strip() in ("application/json", "application/schema+json"):
+            data = pkg.decoded_bytes(r)
+            if r.get("mediatype", "").split(";")[0].strip() in ("application/json", "application/schema+json"):
                 json.loads(data)
         except (OfaError, KeyError, ValueError) as e:
             failures.append(str(e))
     try:
         import jsonschema  # type: ignore
-        schema_path = Path(__file__).resolve().parent.parent / "schema" / "ofa-manifest.schema.json"
-        jsonschema.validate(pkg.manifest, json.loads(schema_path.read_text()))
+        # Validate the OFA rules only. The profile also references the Data
+        # Package v2 profile by URL, and this tool never fetches URLs.
+        profile = json.loads((Path(__file__).resolve().parent.parent / "profiles" / SPEC_VERSION / MANIFEST).read_text())
+        jsonschema.validate(pkg.manifest, {"$ref": "#/definitions/ofa", "definitions": profile["definitions"]})
     except ImportError:
         pass
     except Exception as e:  # jsonschema.ValidationError
@@ -341,33 +377,35 @@ def cmd_verify(args) -> int:
     for f in failures:
         print(f"FAIL: {f}")
     if not failures:
-        n = len(pkg.manifest["streams"])
-        print(f"OK: {args.package}: {n} streams, all digests match")
+        n = len(pkg.manifest["resources"])
+        print(f"OK: {args.package}: {n} resources, all hashes match")
     return 1 if failures else 0
 
 
 def cmd_cat(args) -> int:
     pkg = Package(args.package)
-    sys.stdout.buffer.write(pkg.decoded_bytes(pkg.stream(args.stream)))
+    sys.stdout.buffer.write(pkg.decoded_bytes(pkg.resource(args.resource)))
     return 0
 
 
 def cmd_pack(args) -> int:
     src = Path(args.src)
-    template = json.loads((src / "ofa.json").read_text(encoding="utf-8"))
-    template.setdefault("ofa", SPEC_VERSION)
+    template = json.loads((src / MANIFEST).read_text(encoding="utf-8"))
+    template.setdefault("$schema", PROFILE)
+    template.setdefault("_ofa", {}).setdefault("version", SPEC_VERSION)
     payloads: list[tuple[str, bytes, bool]] = []
-    for s in template["streams"]:
-        source = s.pop("source", None)
-        data = (src / (source or s["path"])).read_bytes()
+    for r in template["resources"]:
+        source = r.pop("source", None)
+        codings = r.get("_ofa", {}).get("contentEncoding", [])
+        data = (src / (source or r["path"])).read_bytes()
         if source:
-            for coding in s.get("content_encoding", []):
+            for coding in codings:
                 data = encode(data, coding)
-        s["size"] = len(data)
-        s["digest"] = "sha256:" + hashlib.sha256(data).hexdigest()
-        mt = s["media_type"].split(";")[0].strip()
-        store = bool(s.get("content_encoding")) or mt.startswith(ALREADY_COMPRESSED)
-        payloads.append((s["path"], data, store))
+        r["bytes"] = len(data)
+        r["hash"] = "sha256:" + hashlib.sha256(data).hexdigest()
+        mt = r["mediatype"].split(";")[0].strip()
+        store = bool(codings) or mt.startswith(ALREADY_COMPRESSED)
+        payloads.append((r["path"], data, store))
     manifest = (json.dumps(template, indent=2, ensure_ascii=False) + "\n").encode("utf-8")
 
     def add(z: zipfile.ZipFile, name: str, data: bytes, store: bool):
@@ -381,11 +419,11 @@ def cmd_pack(args) -> int:
     out = Path(args.output)
     with zipfile.ZipFile(out, "w") as z:
         add(z, "mimetype", MEDIA_TYPE.encode(), True)
-        add(z, "ofa.json", manifest, False)
+        add(z, MANIFEST, manifest, False)
         for name, data, store in payloads:
             add(z, name, data, store)
     Package(out)  # re-open to check what we wrote
-    print(f"wrote {out} ({out.stat().st_size} bytes, {len(payloads)} streams)")
+    print(f"wrote {out} ({out.stat().st_size} bytes, {len(payloads)} resources)")
     return 0
 
 
@@ -394,7 +432,7 @@ def main(argv=None) -> int:
     sub = p.add_subparsers(dest="cmd", required=True)
     a = sub.add_parser("ls"); a.add_argument("package"); a.set_defaults(fn=cmd_ls)
     a = sub.add_parser("verify"); a.add_argument("package"); a.set_defaults(fn=cmd_verify)
-    a = sub.add_parser("cat"); a.add_argument("package"); a.add_argument("stream"); a.set_defaults(fn=cmd_cat)
+    a = sub.add_parser("cat"); a.add_argument("package"); a.add_argument("resource"); a.set_defaults(fn=cmd_cat)
     a = sub.add_parser("pack"); a.add_argument("src"); a.add_argument("output"); a.set_defaults(fn=cmd_pack)
     args = p.parse_args(argv)
     try:
