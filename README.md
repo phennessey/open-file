@@ -1,9 +1,8 @@
 # Open File Archive (OFA)
 
-**A universal file format for the AI programming age.**
-
-OFA is an open-source, self-describing package format. Any program can open
-an `.ofa` file and read what's inside it.
+**A universal file format for the AI programming age.** OFA is an
+open-source, self-describing package format. Any program can open an `.ofa`
+file and read what's inside it.
 
 Status: **draft 0.1**. The spec will change. Feedback welcome through issues
 and [RFCs](rfcs/).
