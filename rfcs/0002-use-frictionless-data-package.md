@@ -3,7 +3,7 @@
 - Status: **Accepted**
 - Created: 2026-11-18
 - Accepted: 2026-11-18
-- Affects: SPEC.md sections 4, 5, 6.1, 8, 9, 10 and Appendix A; the JSON
+- Affects: SPEC.md sections 4, 5, 6.1, 8, 9, 10, and Appendix A; the JSON
   Schema; tools/ofa.py; the examples
 
 ## Summary
@@ -15,7 +15,7 @@ leaves out:
 
 - the single-file container;
 - the `.ofa` file type and media type;
-- per-file compression, roles and integrity rules.
+- per-file compression, roles, and integrity rules.
 
 OFA keeps those additions in private `_ofa` properties, which Data Package
 already allows.
@@ -25,9 +25,9 @@ The pitch becomes: **an OFA file is a Data Package in a single file.**
 ## Motivation
 
 Draft 0.1 defined its own manifest. For each file it records a path, media
-type, size, hash and schema. Frictionless Data Package already records the
-same things, and it has a community, a published standard and libraries in
-Python, JavaScript, R and other languages.
+type, size, hash, and schema. Frictionless Data Package already records the
+same things, and it has a community, a published standard, and libraries in
+Python, JavaScript, R, and other languages.
 
 Two descriptors for the same job split tools and users. If OFA uses Data
 Package, every Frictionless tool can read an OFA manifest on day one. OFA
@@ -58,7 +58,7 @@ checked 2026-11-18). The rules OFA relies on:
 - **Schemas.** A tabular resource's `schema` is a Table Schema. The JSON
   Data Resource recipe uses the same `schema` property for a JSON Schema.
 
-Data Package says nothing about zipped packages, file types or media
+Data Package says nothing about zipped packages, file types, or media
 types. OFA fills that gap.
 
 ## Proposal
@@ -98,8 +98,8 @@ types. OFA fills that gap.
 
 | Draft 0.1 stream field | This RFC resource field |
 |---|---|
-| `id` | `name` (native). OFA requires the Data Package naming advice: lowercase letters, digits, `.`, `-` and `_` only. |
-| `path` | `path` (native). MUST be a single string naming a ZIP entry. Arrays, URLs and inline `data` are not allowed. |
+| `id` | `name` (native). OFA requires the Data Package naming advice: lowercase letters, digits, `.`, `-`, and `_` only. |
+| `path` | `path` (native). MUST be a single string naming a ZIP entry. Arrays, URLs, and inline `data` are not allowed. |
 | `media_type` | `mediatype` (native). The media type of the decoded bytes. See open question 1. |
 | `size` | `bytes` (native). Length of the stored bytes. |
 | `digest` | `hash` (native). MUST use the `sha256:` prefix and 64 lowercase hex digits. |
@@ -111,7 +111,7 @@ types. OFA fills that gap.
 | `lang` | `_ofa.lang` |
 | `metadata`, `extensions` | native fields where they exist, else `_ofa.metadata`, `_ofa.extensions` |
 
-Each resource MUST have `name`, `path`, `mediatype`, `bytes` and `hash`.
+Each resource MUST have `name`, `path`, `mediatype`, `bytes`, and `hash`.
 Data Package makes only `name` and one of `path` or `data` required, so
 OFA is stricter. Every OFA descriptor is still a valid Data Package.
 
@@ -122,7 +122,7 @@ OFA is stricter. Every OFA descriptor is still a valid Data Package.
 2. A JSON resource MAY put a JSON Schema in the native `schema` property,
    as the JSON Data Resource recipe describes.
 3. Any other schema, such as JSON Schema for each record of an NDJSON
-   file, or Avro, Protobuf or Parquet, goes in `_ofa.schema`. It uses the
+   file, or Avro, Protobuf, or Parquet, goes in `_ofa.schema`. It uses the
    draft 0.1 schema reference, with `resource` in place of `stream`:
    `{ "type": "json-schema", "resource": "reading-schema" }`.
 4. Schema files remain resources of their own, with
@@ -139,7 +139,7 @@ The rest of draft 0.1 stays as written:
   `datapackage.json`;
 - the security rules (section 14);
 - the rule that writers describe every entry. The exemptions become
-  `mimetype`, `datapackage.json`, `signatures/` and `META-INF/`.
+  `mimetype`, `datapackage.json`, `signatures/`, and `META-INF/`.
 
 The reserved directory `_ofa/` stays. It doesn't start with a dot, so Data
 Package's ban on hidden folders doesn't affect it.
@@ -226,7 +226,7 @@ The `sensor-log` example under this RFC:
   after 1.0. We will rebuild the three examples.
 - **Frictionless tools.** They can read the manifest of any OFA package
   once someone unzips it. They ignore `_ofa` properties, so they see the
-  files, media types, sizes, hashes and Table Schemas. They don't know
+  files, media types, sizes, hashes, and Table Schemas. They don't know
   about content codings, so they may misread a compressed file (open
   question 1).
 - **Draft 0.1 readers.** They won't find `ofa.json` and will reject the

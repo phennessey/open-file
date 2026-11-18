@@ -15,7 +15,7 @@ didn't reinvent it. Any Frictionless tool can read an OFA manifest.
 
 What OFA adds is the part Data Package leaves open: one file that holds
 everything. OFA defines the ZIP container, the `.ofa` file type and media
-type, and a few extras (compression, roles and integrity checks) in private
+type, and a few extras (compression, roles, and integrity checks) in private
 `_ofa` properties that Data Package allows.
 [RFC 0002](rfcs/0002-use-frictionless-data-package.md) has the details.
 
@@ -35,7 +35,7 @@ package:
 
 Another AI-built tool can open the package and understand it. So can any
 other program, or a person with `unzip` and a text editor. The manifest holds
-what an LLM or a human needs to write a reader: media types, schemas and
+what an LLM or a human needs to write a reader: media types, schemas, and
 roles, all in digestible form.
 
 ## What it looks like
@@ -77,7 +77,7 @@ notes-app.ofa
 ```
 
 Everything outside `_ofa` is plain Data Package. The `_ofa` objects hold what
-OFA adds: compression, roles, links between files and the spec version.
+OFA adds: compression, roles, links between files, and the spec version.
 
 ## Design in five rules
 
@@ -127,15 +127,15 @@ unzip -p examples/sensor-log.ofa datapackage.json
 | [`SPEC.md`](SPEC.md) | The living specification |
 | [`profiles/`](profiles/) | The OFA profile: a JSON Schema that extends the Data Package profile |
 | [`examples/`](examples/) | Sample packages and the folders they were built from |
-| [`tools/ofa.py`](tools/ofa.py) | Reference inspector, verifier and packer |
-| [`research/survey.md`](research/survey.md) | Survey of OPC, EPUB, JAR, RO-Crate, Avro, Matroska, MCAP, HDF5 and others |
+| [`tools/ofa.py`](tools/ofa.py) | Reference inspector, verifier, and packer |
+| [`research/survey.md`](research/survey.md) | Survey of OPC, EPUB, JAR, RO-Crate, Avro, Matroska, MCAP, HDF5, and others |
 | [`rfcs/`](rfcs/) | Proposals for changes, including [RFC 0001](rfcs/0001-extension-and-media-type.md) on the name and [RFC 0002](rfcs/0002-use-frictionless-data-package.md) on using Data Package |
 | [`NEXT_STEPS.md`](NEXT_STEPS.md) | Roadmap and open questions |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | How to propose changes |
 
 ## How OFA relates to other formats
 
-OFA does not replace Parquet, PNG, SQLite or MCAP. It carries them. If your
+OFA does not replace Parquet, PNG, SQLite, or MCAP. It carries them. If your
 data already has a good self-describing format, put that file in a package
 and let the manifest say what it is. OFA fills the gap for everything that
 currently ends up as an undocumented ZIP or a bespoke binary.
@@ -146,7 +146,7 @@ currently ends up as an undocumented ZIP or a bespoke binary.
 [Built on Frictionless Data Package](#built-on-frictionless-data-package).
 
 **[RO-Crate](https://www.researchobject.org/ro-crate/)** describes research
-data: who made it, how and why, in JSON-LD. It doesn't tell a reader how to
+data: who made it, how, and why, in JSON-LD. It doesn't tell a reader how to
 decode the bytes in each file. OFA handles decoding. If you need RO-Crate's
 richer metadata, put `ro-crate-metadata.json` inside the package as a
 resource with the `metadata` role.
@@ -160,13 +160,13 @@ Draft 0.2 is open for public comment. Nothing is final, and we'll change the
 spec based on what you tell us. We want to hear from anyone who might read,
 write or build on OFA files.
 
-- **Questions, ideas and general feedback:** start a thread in
+- **Questions, ideas, and general feedback:** start a thread in
   [Discussions](https://github.com/phennessey/open-file/discussions).
-- **Something wrong, missing or unclear in the spec:** [open an
+- **Something wrong, missing, or unclear in the spec:** [open an
   issue](https://github.com/phennessey/open-file/issues).
 - **A specific change to the spec:** propose it as an [RFC](rfcs/).
 
 ## License
 
-- Specification text, schemas and examples: [CC BY 4.0](LICENSE-SPEC.md)
+- Specification text, schemas, and examples: [CC BY 4.0](LICENSE-SPEC.md)
 - Code in `tools/`: [Apache License 2.0](LICENSE)

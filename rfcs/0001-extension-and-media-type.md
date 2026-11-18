@@ -81,7 +81,7 @@ several rounds. The main reasons for dropping names:
 
 ## Aliases
 
-- **`.ofa.zip`**: Writers MAY add `.zip` when a mail filter, upload form or
+- **`.ofa.zip`**: Writers MAY add `.zip` when a mail filter, upload form, or
   operating system blocks unknown extensions. Readers MUST identify a package
   by its `mimetype` entry, so the extra suffix changes nothing.
 

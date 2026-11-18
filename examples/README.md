@@ -7,7 +7,7 @@ folder twice gives byte-identical files.
 | Package | Shows |
 |---|---|
 | [`hello.ofa`](hello.ofa) | The smallest useful package: one text resource. |
-| [`sensor-log.ofa`](sensor-log.ofa) | gzip-encoded NDJSON with a JSON Schema, CSV with a Frictionless Table Schema, README and licence resources, package metadata. |
+| [`sensor-log.ofa`](sensor-log.ofa) | gzip-encoded NDJSON with a JSON Schema, CSV with a Frictionless Table Schema, README and licence resources, and package metadata. |
 | [`notes-app.ofa`](notes-app.ofa) | An application save file: JSON state with a schema, an image attachment, a thumbnail, and app-private data under `extensions`. |
 
 Rebuild all three:

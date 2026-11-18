@@ -27,7 +27,7 @@ around it, plus the few properties Data Package leaves out, which OFA keeps
 in private `_ofa` properties.
 
 Any program with a ZIP library and a JSON parser can open an OFA package,
-list its contents, check every hash and extract every resource. Any
+list its contents, check every hash, and extract every resource. Any
 Frictionless tool can read its manifest. A program that also supports the
 common media types and schema languages listed in
 [Appendix A](#appendix-a-registries) can interpret the contents fully.
@@ -42,7 +42,7 @@ common media types and schema languages listed in
 
 ### 1.2 Non-goals
 
-- Replacing Parquet, PNG, MCAP, SQLite or any other data format. Those
+- Replacing Parquet, PNG, MCAP, SQLite, or any other data format. Those
   formats go *inside* a package.
 - Encryption. Encrypt the whole file with an external tool such as `age` or
   OpenPGP.
@@ -53,7 +53,7 @@ common media types and schema languages listed in
 ## 2. Conventions and terms
 
 The key words MUST, MUST NOT, REQUIRED, SHALL, SHALL NOT, SHOULD, SHOULD NOT,
-RECOMMENDED, MAY and OPTIONAL in this document are to be interpreted as
+RECOMMENDED, MAY, and OPTIONAL in this document are to be interpreted as
 described in BCP 14 (RFC 2119, RFC 8174) when, and only when, they appear in
 all capitals.
 
@@ -73,7 +73,7 @@ all capitals.
 ## 3. Design principles
 
 1. **Listing never fails.** A reader that meets a package with an unknown
-   version, unknown media types or unknown extensions still lists every
+   version, unknown media types, or unknown extensions still lists every
    resource and verifies every hash.
 2. **Declare, don't execute.** The manifest describes data. Nothing in a
    conforming package requires running code from the package.
@@ -81,7 +81,7 @@ all capitals.
    from IANA. Content codings come from the IANA HTTP Content Coding
    registry. Schemas use existing schema languages. The spec defines new
    terms only where no standard exists (roles).
-4. **Everything is a resource.** Schemas, thumbnails, licences and READMEs
+4. **Everything is a resource.** Schemas, thumbnails, licences, and READMEs
    are resources too. One descriptor shape covers them all.
 5. **Unknown means ignore.** Readers ignore properties they do not
    recognise, unless the package lists them in `_ofa.requires`.
@@ -152,13 +152,13 @@ Entry names MUST:
 - not contain a segment equal to `.` or `..`;
 - not contain a segment starting with `.` when the entry is a resource,
   because Data Package forbids hidden folders in paths;
-- not contain backslash (`\`), colon (`:`), NUL or any C0 control character;
+- not contain backslash (`\`), colon (`:`), NUL, or any C0 control character;
 - be in Unicode Normalization Form C;
 - be unique within the package after case folding, so that the package
   extracts cleanly on case-insensitive file systems;
 - be at most 255 bytes per segment and 1024 bytes in total.
 
-Writers SHOULD use lowercase ASCII letters, digits, `-`, `_` and `.` only.
+Writers SHOULD use lowercase ASCII letters, digits, `-`, `_`, and `.` only.
 
 ### 4.5 Reserved names
 
@@ -170,7 +170,7 @@ resources.
 | `mimetype` | Identification, section 4.2 |
 | `datapackage.json` | Manifest, section 5 |
 | `signatures/` | Detached signatures, section 9.3 |
-| `META-INF/` | Reserved to avoid confusion with JAR, ODF and EPUB tooling |
+| `META-INF/` | Reserved to avoid confusion with JAR, ODF, and EPUB tooling |
 | `_ofa/` | Reserved for future versions of this specification |
 
 ### 4.6 Recommended layout
@@ -270,7 +270,7 @@ Members of each resource's `_ofa` object:
 | `contentEncoding` | array of strings | Content codings applied to the decoded bytes, in the order the writer applied them. Values come from Appendix A.3. Absent or empty means none. |
 | `role` | string | What the resource is for. See 5.6. Default `data`. |
 | `schema` | object | Schema reference for schemas Data Package has no property for. See section 8. |
-| `describes` | array of strings | Names of resources this resource is about. A thumbnail, index or schema resource lists its targets here. |
+| `describes` | array of strings | Names of resources this resource is about. A thumbnail, index, or schema resource lists its targets here. |
 | `lang` | string | BCP 47 language tag. Overrides the package default. |
 | `metadata` | object | Free-form metadata for this resource. |
 | `extensions` | object | Extension data for this resource. |
@@ -279,7 +279,7 @@ Rules:
 
 1. Writers MUST describe every entry except `mimetype`, `datapackage.json`
    and entries under `signatures/` and `META-INF/`.
-2. A resource MUST NOT use inline `data`, a `path` array or a URL in
+2. A resource MUST NOT use inline `data`, a `path` array, or a URL in
    `path`. Every resource is an entry in the ZIP.
 3. Readers MUST report any undescribed entry as a warning and MUST NOT
    interpret it.
@@ -316,7 +316,7 @@ absolute URI for a custom role. Readers MUST treat an unknown role as `data`.
 ### 5.7 Metadata
 
 Writers SHOULD use Data Package's own properties for descriptive metadata:
-`licenses`, `contributors`, `sources`, `keywords`, `homepage` and
+`licenses`, `contributors`, `sources`, `keywords`, `homepage`, and
 `version`. For anything else, `_ofa.metadata` holds a JSON object whose
 members this specification does not fix. Writers SHOULD use Dublin Core
 Terms names without a prefix when one fits, and MAY use full URIs as member
@@ -371,7 +371,7 @@ To obtain a resource's content, a reader performs these steps in order:
    reader supports its type, validate or interpret the parsed content with
    it.
 
-A reader that cannot perform step 4, 5 or 6 for a resource MUST still list
+A reader that cannot perform step 4, 5, or 6 for a resource MUST still list
 it and MUST still offer the stored bytes for extraction.
 
 ## 8. Schemas
@@ -384,7 +384,7 @@ it and MUST still offer the stored bytes for extraction.
 2. **JSON.** A JSON resource MAY give a JSON Schema in the native `schema`
    property, as Data Package's JSON Data Resource recipe describes.
 3. **Everything else** uses `_ofa.schema`: JSON Schema for each record of an
-   NDJSON file, a JSON Schema with a `name`, Avro, Protobuf, XML Schema and
+   NDJSON file, a JSON Schema with a `name`, Avro, Protobuf, XML Schema, and
    any other language in Appendix A.2.
 
 A resource MUST NOT have both a native `schema` and `_ofa.schema`.
@@ -397,9 +397,9 @@ A resource MUST NOT have both a native `schema` and `_ofa.schema`.
 | `resource` | string | one of three | Name of a resource in this package that holds the schema. |
 | `inline` | any JSON | one of three | The schema itself, for schema languages expressed in JSON. |
 | `uri` | string | one of three | An external schema. See 8.3. |
-| `name` | string | no | The record, message or definition inside the schema that applies, for example a Protobuf full message name `acme.v1.Reading`. |
+| `name` | string | no | The record, message, or definition inside the schema that applies, for example a Protobuf full message name `acme.v1.Reading`. |
 
-Exactly one of `resource`, `inline` or `uri` MUST be present.
+Exactly one of `resource`, `inline`, or `uri` MUST be present.
 
 A schema file is an ordinary resource with `_ofa.role` set to `schema` and
 an `_ofa.describes` list naming the resources it covers.
@@ -494,7 +494,7 @@ If a reader would misinterpret the package without an extension, the writer
 MUST list that extension's ID in the package's `_ofa.requires`. A reader
 that does not support a listed extension:
 
-- MUST still list resources, verify hashes and extract stored bytes;
+- MUST still list resources, verify hashes, and extract stored bytes;
 - MUST tell the user that it cannot fully interpret the package;
 - MUST NOT write the package back while claiming to preserve it.
 
@@ -506,7 +506,7 @@ produce wrong results, not merely incomplete ones.
 The package's `_ofa.version` holds `"MAJOR.MINOR"`. The OFA profile URL in
 `$schema` carries the same version.
 
-- **Minor** versions add optional members, roles, schema types and registry
+- **Minor** versions add optional members, roles, schema types, and registry
   entries. A reader for version 1.2 reads a 1.5 package and ignores what it
   does not know.
 - **Major** versions may change meaning. A reader that does not know the
@@ -525,8 +525,8 @@ needs an RFC but no version change.
 
 | Level | A reader at this level MUST |
 |---|---|
-| **Inspect** | Read the ZIP profile (4.1) including ZIP64. Check the `mimetype` entry. Parse the manifest. List each resource's `name`, `path`, `mediatype`, role and `bytes`. Verify hashes. Extract stored bytes. Report undescribed entries. Apply the security rules in section 14. |
-| **Core** | Everything in Inspect, plus: undo the content codings `gzip`, `deflate` and `zstd`; parse the Core media types in Appendix A.4; validate JSON, NDJSON and CSV resources against `json-schema` and `table-schema` schemas. |
+| **Inspect** | Read the ZIP profile (4.1) including ZIP64. Check the `mimetype` entry. Parse the manifest. List each resource's `name`, `path`, `mediatype`, role, and `bytes`. Verify hashes. Extract stored bytes. Report undescribed entries. Apply the security rules in section 14. |
+| **Core** | Everything in Inspect, plus: undo the content codings `gzip`, `deflate`, and `zstd`; parse the Core media types in Appendix A.4; validate JSON, NDJSON, and CSV resources against `json-schema` and `table-schema` schemas. |
 | **Extended** | Everything in Core, plus any further media types and schema types in Appendix A, as the implementation documents. |
 
 A reader MUST state which level it implements. A conformance test suite will
@@ -550,7 +550,7 @@ Version 0.2 does not define the decoder interface. It sets these rules now so
 that early experiments stay safe:
 
 1. Decoders MUST be WebAssembly modules (W3C WebAssembly Core). No native
-   code, scripts or interpreters of other languages.
+   code, scripts, or interpreters of other languages.
 2. A decoder MUST be an ordinary resource with role `decoder`, with its own
    `hash`, and with `_ofa.describes` naming the resources it handles.
 3. A decoder's output MUST be a media type from Appendix A.4, so the result
@@ -558,7 +558,7 @@ that early experiments stay safe:
 4. Readers MUST NOT run a decoder by default. Running one requires a user
    action or configuration naming that decoder's hash.
 5. Readers MUST run decoders with no imports except linear memory and the
-   input buffer: no file system, network, clock or randomness. Readers MUST
+   input buffer: no file system, network, clock, or randomness. Readers MUST
    cap memory and execution time.
 6. Every resource a decoder handles MUST remain listable and extractable
    without it.
@@ -574,7 +574,7 @@ Readers MUST treat every package as untrusted input.
 | Threat | Requirement |
 |---|---|
 | **Path traversal** ("zip slip") | Readers extracting to disk MUST reject names that break section 4.4 and MUST resolve every output path inside the target directory. Data Package's own path rules add to these checks. They don't replace them. |
-| **Symbolic links** | Readers MUST ignore Unix mode bits and external attributes, and MUST NOT create symlinks, devices or executables on extraction. |
+| **Symbolic links** | Readers MUST ignore Unix mode bits and external attributes, and MUST NOT create symlinks, devices, or executables on extraction. |
 | **Decompression bombs** | Readers MUST stop inflating an entry once output exceeds the resource's `bytes`, and MUST apply a configurable limit on total decoded size and on the ratio between decoded and stored size for each content coding step. |
 | **Overlapping entries** | Readers MUST reject packages whose central directory records overlap (4.1 rule 8). This blocks the "overlapping file" class of ZIP bombs. |
 | **Header mismatch** | Readers MUST trust the central directory and SHOULD warn when a local header disagrees with it. |
@@ -583,13 +583,13 @@ Readers MUST treat every package as untrusted input.
 | **Manifest parsing** | Readers MUST use a JSON parser with depth and size limits and MUST reject duplicate member names. |
 | **Remote fetches** | Readers MUST NOT fetch any URI from a manifest (schemas, metadata links, the `$schema` profile) without user consent. A reader that validates against the OFA profile uses a bundled copy. |
 | **Active content** | Readers that render resources (HTML, SVG, PDF, Markdown) MUST disable scripts and remote loads, as a browser does for an untrusted download. |
-| **Spreadsheet export** | Tools that export CSV to spreadsheet programs SHOULD neutralise cells starting with `=`, `+`, `-` or `@`. |
+| **Spreadsheet export** | Tools that export CSV to spreadsheet programs SHOULD neutralise cells starting with `=`, `+`, `-`, or `@`. |
 | **Decoders** | Section 13. |
 | **Hash scope** | A matching hash proves integrity, not authenticity. Only a verified signature (9.3) ties content to a signer. |
 
 ## 15. Privacy considerations
 
-Manifests often carry names, timestamps, generator versions and free-form
+Manifests often carry names, timestamps, generator versions, and free-form
 metadata. Writers SHOULD let users review and remove these before sharing.
 ZIP entries carry modification times. Writers SHOULD set them to a fixed
 value (1980-01-01 00:00:00) unless the user asks to keep them; this also
@@ -929,7 +929,7 @@ can.
 - RFC 7515, JSON Web Signature.
 - RFC 9562, UUIDs.
 - JSON Schema 2020-12.
-- Frictionless Data Package v2, Data Resource and Table Schema
+- Frictionless Data Package v2, Data Resource, and Table Schema
   (<https://datapackage.org/>).
 
 ### Informative

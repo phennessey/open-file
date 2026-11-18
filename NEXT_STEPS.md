@@ -52,7 +52,7 @@ Each implementation states its conformance level (Inspect, Core, Extended).
       that an AI coding assistant can read to emit correct OFA writers.
       This directly targets the format-proliferation problem.
 - [ ] **A web inspector.** Static page, runs locally in the browser, lists
-      resources, renders JSON, CSV, Markdown and images, validates schemas.
+      resources, renders JSON, CSV, Markdown, and images, validates schemas.
 - [ ] **`file(1)` / libmagic rule** and a **shared-mime-info** entry for
       Linux desktops, so `.ofa` files get an icon and a type.
 - [ ] **IANA registration** of `application/vnd.ofa+zip`, using the
@@ -68,7 +68,7 @@ Each implementation states its conformance level (Inspect, Core, Extended).
 | Frictionless Data / Open Knowledge Foundation | OFA's manifest is their Data Package (RFC 0002). Their review keeps OFA an extension of their work, not a rival. | Share RFC 0002 and ask how their tools should handle compressed resources. |
 | RO-Crate and research data managers | Need a single-file, verifiable package. | Show RO-Crate metadata carried as a resource. |
 | Library of Congress Sustainability of Digital Formats, UK National Archives (PRONOM), Digital Preservation Coalition | Format registries and preservation guidance. | Submit a PRONOM signature once the magic bytes are final. |
-| MCAP / Foxglove, Apache Arrow and Parquet maintainers | Their formats become OFA resources. Agree on media type names. | Ask about `application/avro` and Protobuf delimited naming. |
+| MCAP / Foxglove, Apache Arrow, and Parquet maintainers | Their formats become OFA resources. Agree on media type names. | Ask about `application/avro` and Protobuf delimited naming. |
 | AI coding assistant and agent-framework builders | They decide what format a generated tool writes. | Ship the LLM-ready summary and a one-line "save as OFA" snippet per language. |
 | Local-first software community (Ink & Switch, Automerge users) | Care about data that outlives apps. | Talk at a meetup, ask what OFA misses for app save files. |
 | Jupyter and notebook tool authors | Notebooks plus data plus outputs fit the package model. | Prototype "export notebook with data as OFA". |
@@ -112,6 +112,6 @@ Each implementation states its conformance level (Inspect, Core, Extended).
 
 | Version | Exit criteria |
 |---|---|
-| 0.2 | Name settled, conformance suite v1, Python and TypeScript libraries at Core level. |
+| 0.2 | Name settled, conformance suite v1, and Python and TypeScript libraries at Core level. |
 | 0.3 | Rust CLI, web inspector, IANA registration filed, two outside projects writing packages. |
 | 1.0 | Three independent implementations pass the conformance suite. No breaking change for six months. Governance and patent policy in place. |

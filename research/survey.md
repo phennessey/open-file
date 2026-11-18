@@ -40,7 +40,7 @@ Used by `.docx`, `.xlsx`, `.pptx`, `.3mf`, `.nupkg`, `.vsix`.
 
 ### Adobe UCF (Universal Container Format)
 
-Adobe generalized OCF into UCF for AIR, IDML and others.
+Adobe generalized OCF into UCF for AIR, IDML, and others.
 
 - **Does well.** Proves the OCF pattern works outside e-books.
 - **Falls short.** No living specification, no schema or codec declarations,
@@ -70,7 +70,7 @@ Adobe generalized OCF into UCF for AIR, IDML and others.
 ### Frictionless Data Package v2 and BagIt (RFC 8493)
 
 - **Frictionless** has a JSON descriptor (`datapackage.json`) whose resources
-  carry `path`, `mediatype`, `encoding`, `hash` and a `schema` (Table
+  carry `path`, `mediatype`, `encoding`, `hash`, and a `schema` (Table
   Schema). This sits closest to what we want. It targets tabular data and does
   not define a single-file binary container or a codec story.
 - **BagIt** gives libraries and archives a simple fixity model: payload files
@@ -87,7 +87,7 @@ Adobe generalized OCF into UCF for AIR, IDML and others.
   name (`null`, `deflate`, `snappy`, `zstandard`, `bzip2`, `xz`). Sync markers
   make files splittable. Any Avro reader decodes any Avro file.
 - **Falls short.** One file holds one record stream with one schema. No place
-  for images, documents or a second table.
+  for images, documents, or a second table.
 - **Lesson.** Embed the schema with the data. Declare the codec by name from
   a short list.
 
@@ -127,7 +127,7 @@ Both carry their own schemas and both have registered media types
 
 ### HDF5 and Zarr v3
 
-- **HDF5** offers groups, typed n-dimensional datasets, attributes and
+- **HDF5** offers groups, typed n-dimensional datasets, attributes, and
   chunking with registered filter IDs. In practice one C library defines the
   format, the spec runs to hundreds of pages, and filter plugins are native
   code loaded at read time. That plugin model is the security problem we want
@@ -153,7 +153,7 @@ Both carry their own schemas and both have registered media types
 
 1. **No common manifest.** Each ZIP-based format invents its own (XML,
    key-value, JSON-LD) and its own name for it.
-2. **Schemas live elsewhere.** OPC, OCF and UCF tell you a media type and
+2. **Schemas live elsewhere.** OPC, OCF, and UCF tell you a media type and
    stop. A program that meets an unfamiliar JSON or binary entry has no
    machine-readable description of it.
 3. **Integrity is optional or absent.** Only JAR and BagIt put a digest on
@@ -174,7 +174,7 @@ Both carry their own schemas and both have registered media types
 | Media types | IANA Media Types registry (RFC 6838), `+zip` suffix (RFC 6839) | Existing vocabulary for "what is this file". |
 | Byte codecs | IANA HTTP Content Coding registry: `gzip` (RFC 1952), `deflate` (RFC 1951), `br` (RFC 7932), `zstd` (RFC 8878) | Names already registered and implemented in every browser and HTTP stack. |
 | Digests | SHA-256 (FIPS 180-4), written as in OCI descriptors | One algorithm, universal support. |
-| Schemas | JSON Schema 2020-12, Apache Avro, Protocol Buffers (`FileDescriptorSet`), Frictionless Table Schema | Declarative, widely implemented, cover JSON, tabular and binary records. |
+| Schemas | JSON Schema 2020-12, Apache Avro, Protocol Buffers (`FileDescriptorSet`), Frictionless Table Schema | Declarative, widely implemented, cover JSON, tabular, and binary records. |
 | Identifiers and times | UUID (RFC 9562), RFC 3339 timestamps, BCP 47 language tags, URIs (RFC 3986) | Standard building blocks. |
 | Signatures (optional) | JWS with detached payload (RFC 7515, Appendix F) | Libraries exist in every language. COSE (RFC 9052) as a later option. |
 | Sandboxed decoders (experimental) | WebAssembly Core 2.0 (W3C) | The only widely deployed sandbox with a formal spec. |
@@ -185,7 +185,7 @@ Both carry their own schemas and both have registered media types
   an RFC if append-while-recording becomes a requirement.
 - JSON for the manifest. CBOR stays allowed as a stream encoding, but one
   manifest syntax keeps every reader simple.
-- Every entry appears in the manifest with media type, size and digest.
+- Every entry appears in the manifest with media type, size, and digest.
 - Two vocabularies drawn from existing registries: media type for "what the
   bytes are", content coding for "how they were compressed". One new
   vocabulary of our own: `role`.

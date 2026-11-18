@@ -32,7 +32,7 @@ content codings, well-known media types) and changes to conformance levels.
 2. Fill it in. Keep it short. Show a manifest example.
 3. Open a pull request. A maintainer assigns the next number.
 4. Discussion runs for at least 14 days.
-5. Maintainers accept, reject or postpone, and record the reason in the RFC.
+5. Maintainers accept, reject, or postpone, and record the reason in the RFC.
 6. An accepted RFC lands in `SPEC.md` in a separate pull request that links
    to it.
 
