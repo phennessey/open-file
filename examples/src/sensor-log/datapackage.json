@@ -1,13 +1,13 @@
 {
-  "$schema": "https://ofa-format.org/profiles/0.2/datapackage.json",
+  "$schema": "https://ofa-format.org/profiles/0.3/datapackage.json",
   "id": "urn:uuid:5f0c2b1e-8a0e-4d0b-9c55-6a3f6f1b2c10",
   "title": "Rooftop weather stations, 1 November 2026",
   "created": "2026-11-02T08:00:00Z",
   "licenses": [{ "name": "CC-BY-4.0" }],
   "contributors": [{ "title": "Example Weather Club", "roles": ["creator"] }],
   "_ofa": {
-    "version": "0.2",
-    "generator": { "name": "ofa.py", "version": "0.2.0" },
+    "version": "0.3",
+    "generator": { "name": "ofa.py", "version": "0.3.0" },
     "primary": "readings",
     "lang": "en"
   },
@@ -17,8 +17,8 @@
       "path": "data/readings.ndjson.gz",
       "source": "raw/readings.ndjson",
       "mediatype": "application/x-ndjson",
+      "compression": "gz",
       "_ofa": {
-        "contentEncoding": ["gzip"],
         "schema": { "type": "json-schema", "resource": "reading-schema" }
       }
     },

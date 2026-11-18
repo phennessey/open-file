@@ -65,7 +65,7 @@ Each implementation states its conformance level (Inspect, Core, Extended).
 
 | Community | Why they care | First contact |
 |---|---|---|
-| Frictionless Data / Open Knowledge Foundation | OFA's manifest is their Data Package (RFC 0002). Their review keeps OFA an extension of their work, not a rival. | Share RFC 0002 and ask how their tools should handle compressed resources. |
+| Frictionless Data / Open Knowledge Foundation | OFA's manifest is their Data Package (RFC 0002), and OFA answers their 2014 request for single-file packages (RFC 0003). | Reply in [discussion #911](https://github.com/frictionlessdata/datapackage/discussions/911) with the draft [Zipped Data Package recipe](recipes/zipped-data-package.md), and ask whether they'd add `zst` and `br` to the compression recipe. |
 | RO-Crate and research data managers | Need a single-file, verifiable package. | Show RO-Crate metadata carried as a resource. |
 | Library of Congress Sustainability of Digital Formats, UK National Archives (PRONOM), Digital Preservation Coalition | Format registries and preservation guidance. | Submit a PRONOM signature once the magic bytes are final. |
 | MCAP / Foxglove, Apache Arrow, and Parquet maintainers | Their formats become OFA resources. Agree on media type names. | Ask about `application/avro` and Protobuf delimited naming. |
@@ -84,9 +84,11 @@ Each implementation states its conformance level (Inspect, Core, Extended).
 
 ## 7. Open questions
 
-1. **Streaming and append.** ZIP writes its central directory last. Do we
-   need a second profile for append-while-recording (EBML or an MCAP-style
-   chunked layout), or is "put an MCAP stream inside" enough?
+1. **Streaming and append.** ZIP writes its central directory last. SPEC
+   section 4 now separates the package model from its ZIP serialization, as
+   BagIt does. Should a second serialization (for example `tar` with
+   Zstandard) cover append-while-recording, or is "put an MCAP resource
+   inside" enough?
 2. **Large packages.** Should resources split across several entries
    (`parts`) for parallel writes and resumable uploads, or does ZIP64 cover
    real needs?
@@ -112,6 +114,6 @@ Each implementation states its conformance level (Inspect, Core, Extended).
 
 | Version | Exit criteria |
 |---|---|
-| 0.2 | Name settled, conformance suite v1, and Python and TypeScript libraries at Core level. |
-| 0.3 | Rust CLI, web inspector, IANA registration filed, two outside projects writing packages. |
+| 0.4 | Conformance suite v1, and Python and TypeScript libraries at Core level. |
+| 0.5 | Rust CLI, web inspector, IANA registration filed, two outside projects writing packages. |
 | 1.0 | Three independent implementations pass the conformance suite. No breaking change for six months. Governance and patent policy in place. |

@@ -14,10 +14,22 @@ Frictionless had already solved how to describe a set of data files, so we
 didn't reinvent it. Any Frictionless tool can read an OFA manifest.
 
 What OFA adds is the part Data Package leaves open: one file that holds
-everything. OFA defines the ZIP container, the `.ofa` file type and media
-type, and a few extras (compression, roles, and integrity checks) in private
+everything. The Frictionless community has asked for that since 2014, in
+[discussion #911](https://github.com/frictionlessdata/datapackage/discussions/911),
+and OFA builds on the ideas raised there:
+
+- OFA defines the ZIP container, the `.ofa` file type, and its media type.
+- It uses Frictionless's own `compression` property for compressed files.
+- It opens existing zipped Data Packages, including GitHub's "Download ZIP"
+  archives, and converts them to OFA with one command.
+- It reads a package over HTTP without downloading the whole file.
+
+OFA's few extras, such as roles and links between files, live in private
 `_ofa` properties that Data Package allows.
-[RFC 0002](rfcs/0002-use-frictionless-data-package.md) has the details.
+[RFC 0002](rfcs/0002-use-frictionless-data-package.md) and
+[RFC 0003](rfcs/0003-frictionless-bundling-ideas.md) have the details. We've
+also drafted a [Zipped Data Package recipe](recipes/zipped-data-package.md)
+to offer back to Frictionless.
 
 ## Why this exists
 
@@ -52,9 +64,9 @@ notes-app.ofa
 
 ```json
 {
-  "$schema": "https://ofa-format.org/profiles/0.2/datapackage.json",
+  "$schema": "https://ofa-format.org/profiles/0.3/datapackage.json",
   "title": "Kitchen renovation notes",
-  "_ofa": { "version": "0.2", "primary": "notes" },
+  "_ofa": { "version": "0.3", "primary": "notes" },
   "resources": [
     {
       "name": "notes",
@@ -77,7 +89,7 @@ notes-app.ofa
 ```
 
 Everything outside `_ofa` is plain Data Package. The `_ofa` objects hold what
-OFA adds: compression, roles, links between files, and the spec version.
+OFA adds: roles, links between files, and the spec version.
 
 ## Design in five rules
 
@@ -93,8 +105,8 @@ OFA adds: compression, roles, links between files, and the spec version.
 
 ## Quick start
 
-The reference tool needs Python 3.10 or later and nothing else. zstd support
-needs Python 3.14.
+The reference tool needs Python 3.10 or later and nothing else. `zst`
+compression needs Python 3.14.
 
 ```bash
 python3 tools/ofa.py ls examples/sensor-log.ofa
@@ -114,6 +126,18 @@ Build your own from a folder containing a `datapackage.json` template:
 python3 tools/ofa.py pack examples/src/sensor-log my-log.ofa
 ```
 
+Already have a Data Package, as a folder or a ZIP? Turn it into an OFA file:
+
+```bash
+python3 tools/ofa.py adopt my-datapackage.zip my-data.ofa
+```
+
+List a package on the web without downloading all of it:
+
+```bash
+python3 tools/ofa.py ls https://raw.githubusercontent.com/phennessey/open-file/main/examples/sensor-log.ofa
+```
+
 No tool at all? Not a problem — it's just a ZIP file:
 
 ```bash
@@ -129,7 +153,8 @@ unzip -p examples/sensor-log.ofa datapackage.json
 | [`examples/`](examples/) | Sample packages and the folders they were built from |
 | [`tools/ofa.py`](tools/ofa.py) | Reference inspector, verifier, and packer |
 | [`research/survey.md`](research/survey.md) | Survey of OPC, EPUB, JAR, RO-Crate, Avro, Matroska, MCAP, HDF5, and others |
-| [`rfcs/`](rfcs/) | Proposals for changes, including [RFC 0001](rfcs/0001-extension-and-media-type.md) on the name and [RFC 0002](rfcs/0002-use-frictionless-data-package.md) on using Data Package |
+| [`rfcs/`](rfcs/) | Proposals for changes, including [RFC 0001](rfcs/0001-extension-and-media-type.md) on the name, [RFC 0002](rfcs/0002-use-frictionless-data-package.md) on using Data Package, and [RFC 0003](rfcs/0003-frictionless-bundling-ideas.md) on ideas from the Frictionless community |
+| [`recipes/`](recipes/) | A draft Zipped Data Package recipe, written for the Frictionless site |
 | [`NEXT_STEPS.md`](NEXT_STEPS.md) | Roadmap and open questions |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | How to propose changes |
 
@@ -156,7 +181,7 @@ existing format.
 
 ## Open for public comment
 
-Draft 0.2 is open for public comment. Nothing is final, and we'll change the
+Draft 0.3 is open for public comment. Nothing is final, and we'll change the
 spec based on what you tell us. We want to hear from anyone who might read,
 write or build on OFA files.
 

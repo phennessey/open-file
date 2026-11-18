@@ -1,7 +1,7 @@
 {
-  "$schema": "https://ofa-format.org/profiles/0.2/datapackage.json",
+  "$schema": "https://ofa-format.org/profiles/0.3/datapackage.json",
   "title": "Hello",
-  "_ofa": { "version": "0.2", "primary": "hello" },
+  "_ofa": { "version": "0.3", "primary": "hello" },
   "resources": [
     {
       "name": "hello",

@@ -1,6 +1,6 @@
 # Open File Archive (OFA)
 
-- Version: **0.2.0-draft**
+- Version: **0.3.0-draft**
 - Status: Working draft, **open for public comment**. Expect breaking changes
   before 1.0. Comment in [Discussions](https://github.com/phennessey/open-file/discussions) or
   [open an issue](https://github.com/phennessey/open-file/issues).
@@ -8,9 +8,13 @@
 - Extension: `.ofa`
 - License: [CC BY 4.0](LICENSE-SPEC.md)
 
-Version 0.2 replaces the 0.1 manifest, `ofa.json`, with a standard
+Version 0.2 replaced the 0.1 manifest, `ofa.json`, with a standard
 Frictionless Data Package descriptor, `datapackage.json`
-([RFC 0002](rfcs/0002-use-frictionless-data-package.md)).
+([RFC 0002](rfcs/0002-use-frictionless-data-package.md)). Version 0.3 adopts
+ideas from the Frictionless community's long-running discussion of
+single-file Data Packages: Frictionless's `compression` property, a
+compatibility mode for plain zipped Data Packages, an `adopt` operation, and
+reading over HTTP ([RFC 0003](rfcs/0003-frictionless-bundling-ideas.md)).
 
 ## 1. Introduction
 
@@ -19,7 +23,7 @@ manifest describing them. The manifest is a
 [Frictionless Data Package](https://datapackage.org/) descriptor,
 `datapackage.json`, used exactly as that standard defines it. For each file
 it tells a reader what kind of bytes it holds (media type), what structure
-they follow (schema), how the bytes were compressed (content coding), and
+they follow (schema), how the bytes were compressed (compression), and
 what part the file plays in the package (role).
 
 Data Package describes the data. OFA defines the single-file container
@@ -66,7 +70,7 @@ all capitals.
 | **Resource** | An entry described by a Data Resource in the manifest's `resources` array. |
 | **`_ofa` properties** | The private properties this specification adds to Data Package descriptors. |
 | **Stored bytes** | The bytes of an entry after ZIP decompression. What `unzip` writes to disk. |
-| **Decoded bytes** | Stored bytes after reversing every content coding the descriptor lists. |
+| **Decoded bytes** | Stored bytes after undoing the resource's `compression`, if it has one. |
 | **Writer** | Software that creates or modifies packages. |
 | **Reader** | Software that opens packages. |
 
@@ -78,8 +82,7 @@ all capitals.
 2. **Declare, don't execute.** The manifest describes data. Nothing in a
    conforming package requires running code from the package.
 3. **Borrow standards.** The manifest is a Data Package. Media types come
-   from IANA. Content codings come from the IANA HTTP Content Coding
-   registry. Schemas use existing schema languages. The spec defines new
+   from IANA. Compression uses Data Package's `compression` property. Schemas use existing schema languages. The spec defines new
    terms only where no standard exists (roles).
 4. **Everything is a resource.** Schemas, thumbnails, licences, and READMEs
    are resources too. One descriptor shape covers them all.
@@ -89,6 +92,15 @@ all capitals.
    size and a SHA-256 hash.
 
 ## 4. Container
+
+A package is a set of named entries: an identification entry (`mimetype`),
+a manifest (`datapackage.json`), the resources the manifest describes, and
+optional signatures. Those rules don't depend on the archive format. This
+version defines one way to write them down, a ZIP file, in sections 4.1 to
+4.6. Following the approach of BagIt (RFC 8493, section 4), another
+serialization, such as `tar` with Zstandard for files written while
+recording, could be added later. It would need its own RFC and its own
+media type.
 
 ### 4.1 ZIP profile
 
@@ -112,7 +124,7 @@ A package MUST be a valid ZIP file as defined by the PKWARE APPNOTE (version
    reject a package in which two central directory records point at
    overlapping byte ranges.
 9. Writers SHOULD store (method 0) any entry that already has a content
-   coding or an inherently compressed media type (PNG, JPEG, Parquet, zstd
+   `compression` or an inherently compressed media type (PNG, JPEG, Parquet, zstd
    data). Compressing those twice wastes time.
 10. Writers MAY pad the extra field of Stored entries so that entry data
     starts on a 64-byte boundary. This lets readers memory-map those entries.
@@ -189,6 +201,59 @@ example.ofa
 └── signatures/         optional detached signatures
 ```
 
+### 4.7 Plain zipped Data Packages (compatibility mode)
+
+Frictionless tools have read zipped Data Packages since 2016, and many
+exist, including the archives GitHub produces for "Download ZIP". A **plain
+zipped Data Package** is a ZIP file with no `mimetype` entry that holds
+exactly one `datapackage.json`, either at the root or inside a single
+top-level folder.
+
+1. Readers MAY open a plain zipped Data Package in **compatibility mode**.
+   In that mode a reader lists resources and extracts their bytes.
+2. The reader MUST warn the user that the file is not an OFA package, and
+   MUST NOT report hashes as verified unless the descriptor gives SHA-256
+   hashes that match.
+3. The reader MUST still apply every rule in section 14.
+4. A plain zipped Data Package is never a conforming OFA package. Writers
+   turn one into an OFA package by adopting it (4.8).
+
+### 4.8 Adopting a Data Package
+
+**Adopt** turns a plain zipped Data Package, or a folder holding a
+`datapackage.json`, into an OFA package. An adopting writer MUST:
+
+1. write `mimetype` first and `datapackage.json` second, at the root,
+   removing any single top-level folder from paths;
+2. add `$schema` and `_ofa.version`, and fill in `bytes` and `hash` for
+   every resource;
+3. describe every other file it keeps as a resource, with a media type
+   guessed from the file extension and, where the name makes it clear, a
+   role (`README` gets `documentation`, `LICENSE` gets `license`);
+4. stop with a clear message on resources an OFA package can't carry: a URL
+   in `path`, inline `data`, or a `path` array.
+
+An adopting writer SHOULD keep every other property of the original
+descriptor as it was, and SHOULD show the user the media types and roles it
+guessed.
+
+### 4.9 Reading over HTTP
+
+The Frictionless community asked for a way to read data in a bundle
+"without downloading the entire bundle". A reader can open a package on a
+web server that supports HTTP range requests:
+
+1. Fetch the end of the file to find the end of central directory record,
+   then fetch the central directory.
+2. Fetch the start of the file to check `mimetype` and read
+   `datapackage.json`, which section 4 places first and second.
+3. Fetch only the entries the user asks for.
+
+Writers SHOULD store large resources with method 0 (Stored), aligned as
+4.1 rule 10 allows, so that readers can fetch byte ranges inside them. A
+URL that the user gives a reader counts as consent to fetch that URL. It
+does not cover any other URL, including any found inside the package.
+
 ## 5. Manifest
 
 ### 5.1 A Data Package descriptor
@@ -200,10 +265,10 @@ which Data Package allows.
 
 1. `datapackage.json` MUST be valid against the Data Package v2 profile.
 2. Its root `$schema` MUST name the OFA profile for the version it follows.
-   For this draft: `https://ofa-format.org/profiles/0.2/datapackage.json`.
+   For this draft: `https://ofa-format.org/profiles/0.3/datapackage.json`.
    The profile is a JSON Schema (draft-07) that extends the Data Package v2
    profile. It lives in this repository at
-   [`profiles/0.2/datapackage.json`](profiles/0.2/datapackage.json).
+   [`profiles/0.3/datapackage.json`](profiles/0.3/datapackage.json).
    (`ofa-format.org` is a placeholder until the project has a domain.)
 3. The manifest MUST also conform to I-JSON (RFC 7493): UTF-8 with no byte
    order mark, no duplicate member names, and integers within
@@ -236,7 +301,7 @@ Members of the package's `_ofa` object:
 
 | Member | Type | Req. | Meaning |
 |---|---|---|---|
-| `version` | string | **yes** | OFA spec version, as `"MAJOR.MINOR"`. For this draft: `"0.2"`. |
+| `version` | string | **yes** | OFA spec version, as `"MAJOR.MINOR"`. For this draft: `"0.3"`. |
 | `modified` | string | no | RFC 3339 timestamp of last modification. |
 | `generator` | object | no | `{ "name": string, "version": string, "uri": string }` identifying the writer software. |
 | `primary` | string | no | Name of the resource a reader should open first. |
@@ -258,6 +323,7 @@ entry. OFA requires five properties that Data Package leaves optional:
 | `bytes` | integer | **yes** | Length of the **stored bytes**. |
 | `hash` | string | **yes** | `sha256:` followed by 64 lowercase hex digits: the SHA-256 of the stored bytes. |
 | `encoding` | string | no | Character encoding of a text resource, as Data Package defines it. Default UTF-8. |
+| `compression` | string | no | `gz`, `zst` or `br`, following Data Package's Compression of resources recipe. See 5.5. |
 | `type` | string | no | `table` for tabular data, as Data Package defines it. |
 | `schema` | string or object | no | Schema as Data Package defines it. See section 8. |
 | `title`, `description` | string | no | Human-readable name and summary. |
@@ -267,7 +333,6 @@ Members of each resource's `_ofa` object:
 
 | Member | Type | Meaning |
 |---|---|---|
-| `contentEncoding` | array of strings | Content codings applied to the decoded bytes, in the order the writer applied them. Values come from Appendix A.3. Absent or empty means none. |
 | `role` | string | What the resource is for. See 5.6. Default `data`. |
 | `schema` | object | Schema reference for schemas Data Package has no property for. See section 8. |
 | `describes` | array of strings | Names of resources this resource is about. A thumbnail, index, or schema resource lists its targets here. |
@@ -296,10 +361,18 @@ exists, writers MUST use one listed in Appendix A.4, or a `vnd.` or
 already in common use and listed in Appendix A.4.
 
 `mediatype` names the decoded bytes. A gzipped NDJSON file has
-`"mediatype": "application/x-ndjson"` and
-`"_ofa": { "contentEncoding": ["gzip"] }`. Writers SHOULD also give such a
-file the usual extension of its coding (`.gz`, `.zst`, `.br`), which some
-Frictionless tools use to detect compression.
+`"mediatype": "application/x-ndjson"` and `"compression": "gz"`.
+
+Compression follows the Data Package recipe
+[Compression of resources](https://datapackage.org/recipes/compression-of-resources/):
+
+1. A compressed resource MUST have a `compression` property with a value
+   from Appendix A.3.
+2. Its `path` MUST end with the matching extension (`.gz`, `.zst` or
+   `.br`), so tools that infer compression from the file name also read it
+   correctly.
+3. `bytes` and `hash` describe the compressed file, as the recipe says.
+4. A resource has at most one compression step.
 
 Writers SHOULD use `application/octet-stream` for bytes with no meaningful
 type, rather than guessing.
@@ -364,8 +437,8 @@ To obtain a resource's content, a reader performs these steps in order:
 3. **Verify.** Compare the length with `bytes` and the SHA-256 with `hash`.
    On mismatch, the reader MUST NOT pass the bytes on as valid content. It
    MAY offer them to the user, marked as corrupt.
-4. **Undo content codings.** Apply the inverse of each entry in
-   `_ofa.contentEncoding`, last entry first. The result is the decoded bytes.
+4. **Decompress.** If the resource has a `compression`, decompress the
+   stored bytes. The result is the decoded bytes.
 5. **Parse.** Interpret the decoded bytes according to `mediatype`.
 6. **Validate** (optional). If the resource has a schema (section 8) and the
    reader supports its type, validate or interpret the parsed content with
@@ -526,11 +599,11 @@ needs an RFC but no version change.
 | Level | A reader at this level MUST |
 |---|---|
 | **Inspect** | Read the ZIP profile (4.1) including ZIP64. Check the `mimetype` entry. Parse the manifest. List each resource's `name`, `path`, `mediatype`, role, and `bytes`. Verify hashes. Extract stored bytes. Report undescribed entries. Apply the security rules in section 14. |
-| **Core** | Everything in Inspect, plus: undo the content codings `gzip`, `deflate`, and `zstd`; parse the Core media types in Appendix A.4; validate JSON, NDJSON, and CSV resources against `json-schema` and `table-schema` schemas. |
+| **Core** | Everything in Inspect, plus: decompress `gz` and `zst`; parse the Core media types in Appendix A.4; validate JSON, NDJSON, and CSV resources against `json-schema` and `table-schema` schemas. |
 | **Extended** | Everything in Core, plus any further media types and schema types in Appendix A, as the implementation documents. |
 
 A reader MUST state which level it implements. A conformance test suite will
-accompany 0.2.
+accompany a later draft.
 
 ### 12.2 Writers
 
@@ -546,7 +619,7 @@ it. For those cases a future version may allow a package to carry a
 bytes into a standard media type (for example, a proprietary binary into
 Arrow IPC or JSON).
 
-Version 0.2 does not define the decoder interface. It sets these rules now so
+Version 0.3 does not define the decoder interface. It sets these rules now so
 that early experiments stay safe:
 
 1. Decoders MUST be WebAssembly modules (W3C WebAssembly Core). No native
@@ -575,7 +648,7 @@ Readers MUST treat every package as untrusted input.
 |---|---|
 | **Path traversal** ("zip slip") | Readers extracting to disk MUST reject names that break section 4.4 and MUST resolve every output path inside the target directory. Data Package's own path rules add to these checks. They don't replace them. |
 | **Symbolic links** | Readers MUST ignore Unix mode bits and external attributes, and MUST NOT create symlinks, devices, or executables on extraction. |
-| **Decompression bombs** | Readers MUST stop inflating an entry once output exceeds the resource's `bytes`, and MUST apply a configurable limit on total decoded size and on the ratio between decoded and stored size for each content coding step. |
+| **Decompression bombs** | Readers MUST stop inflating an entry once output exceeds the resource's `bytes`, and MUST apply a configurable limit on total decoded size and on the ratio between decoded and stored size when decompressing. |
 | **Overlapping entries** | Readers MUST reject packages whose central directory records overlap (4.1 rule 8). This blocks the "overlapping file" class of ZIP bombs. |
 | **Header mismatch** | Readers MUST trust the central directory and SHOULD warn when a local header disagrees with it. |
 | **Polyglot files** | Rule 7 of 4.1 forbids leading data, which stops a package from also being a valid executable or PDF. Readers SHOULD reject files with leading data. |
@@ -614,9 +687,9 @@ hello.ofa
 
 ```json
 {
-  "$schema": "https://ofa-format.org/profiles/0.2/datapackage.json",
+  "$schema": "https://ofa-format.org/profiles/0.3/datapackage.json",
   "title": "Hello",
-  "_ofa": { "version": "0.2", "primary": "hello" },
+  "_ofa": { "version": "0.3", "primary": "hello" },
   "resources": [
     {
       "name": "hello",
@@ -649,15 +722,15 @@ sensor-log.ofa
 
 ```json
 {
-  "$schema": "https://ofa-format.org/profiles/0.2/datapackage.json",
+  "$schema": "https://ofa-format.org/profiles/0.3/datapackage.json",
   "id": "urn:uuid:5f0c2b1e-8a0e-4d0b-9c55-6a3f6f1b2c10",
   "title": "Rooftop weather stations, 1 November 2026",
   "created": "2026-11-02T08:00:00Z",
   "licenses": [{ "name": "CC-BY-4.0" }],
   "contributors": [{ "title": "Example Weather Club", "roles": ["creator"] }],
   "_ofa": {
-    "version": "0.2",
-    "generator": { "name": "ofa.py", "version": "0.2.0" },
+    "version": "0.3",
+    "generator": { "name": "ofa.py", "version": "0.3.0" },
     "primary": "readings",
     "lang": "en"
   },
@@ -666,10 +739,10 @@ sensor-log.ofa
       "name": "readings",
       "path": "data/readings.ndjson.gz",
       "mediatype": "application/x-ndjson",
+      "compression": "gz",
       "bytes": 214,
       "hash": "sha256:…",
       "_ofa": {
-        "contentEncoding": ["gzip"],
         "schema": { "type": "json-schema", "resource": "reading-schema" }
       }
     },
@@ -732,11 +805,11 @@ as JSON and display the attached image.
 
 ```json
 {
-  "$schema": "https://ofa-format.org/profiles/0.2/datapackage.json",
+  "$schema": "https://ofa-format.org/profiles/0.3/datapackage.json",
   "title": "Kitchen renovation notes",
   "created": "2026-10-28T19:12:00Z",
   "_ofa": {
-    "version": "0.2",
+    "version": "0.3",
     "modified": "2026-10-30T08:41:00Z",
     "generator": { "name": "quicknotes", "version": "0.3.1" },
     "primary": "notes",
@@ -791,17 +864,17 @@ The `app.quicknotes.ui` extension holds application state that only
 
 ```json
 {
-  "$schema": "https://ofa-format.org/profiles/0.2/datapackage.json",
-  "_ofa": { "version": "0.2" },
+  "$schema": "https://ofa-format.org/profiles/0.3/datapackage.json",
+  "_ofa": { "version": "0.3" },
   "resources": [
     {
       "name": "events",
       "path": "data/events.binpb.zst",
       "mediatype": "application/vnd.ofa.protobuf-delimited",
+      "compression": "zst",
       "bytes": 48213,
       "hash": "sha256:…",
       "_ofa": {
-        "contentEncoding": ["zstd"],
         "schema": { "type": "protobuf", "resource": "events-fds", "name": "acme.telemetry.v1.Event" }
       }
     },
@@ -862,19 +935,18 @@ The package's `_ofa.primary` member, not a role, marks the main resource.
 | `protobuf` | Protocol Buffers `FileDescriptorSet` (binary) | `application/x-protobuf` | Protobuf messages |
 | `xsd` | W3C XML Schema 1.1 | `application/xml` | XML |
 
-### A.3 Content codings
+### A.3 Compression
 
-Values come from the IANA HTTP Content Coding registry.
+Values for the `compression` property. `gz` comes from Data Package's
+Compression of resources recipe. `zst` and `br` follow its convention of
+naming the file extension. The recipe's `zip` value is not allowed: a ZIP
+inside a package is an archive, not a compressed resource.
 
-| Coding | Specification | Core |
-|---|---|---|
-| `gzip` | RFC 1952 | yes |
-| `deflate` | RFC 1950 (zlib wrapper, as in HTTP) | yes |
-| `zstd` | RFC 8878 | yes |
-| `br` | RFC 7932 | no |
-
-Writers MUST NOT use codings that encrypt or that need a shared dictionary
-(`aes128gcm`, `dcb`, `dcz`) in version 0.2.
+| Value | Format | Extension | Core |
+|---|---|---|---|
+| `gz` | gzip, RFC 1952 | `.gz` | yes |
+| `zst` | Zstandard, RFC 8878 | `.zst` | yes |
+| `br` | Brotli, RFC 7932 | `.br` | no |
 
 ### A.4 Well-known media types
 
@@ -924,13 +996,14 @@ can.
 - RFC 3339, timestamps. RFC 3986, URIs. BCP 47, language tags.
 - RFC 6838, media type specifications. RFC 6839, structured syntax suffixes.
 - RFC 7493, I-JSON. RFC 8259, JSON.
-- RFC 1950, RFC 1951, RFC 1952, RFC 7932, RFC 8878, content codings.
+- RFC 1951 (Deflate), RFC 1952 (gzip), RFC 7932 (Brotli) and RFC 8878
+  (Zstandard).
 - FIPS 180-4, SHA-256.
 - RFC 7515, JSON Web Signature.
 - RFC 9562, UUIDs.
 - JSON Schema 2020-12.
 - Frictionless Data Package v2, Data Resource, and Table Schema
-  (<https://datapackage.org/>).
+  (<https://datapackage.org/>), and its Compression of resources recipe.
 
 ### Informative
 
@@ -943,4 +1016,9 @@ can.
 - OCI Image Specification, descriptors.
 - glTF 2.0, extensions mechanism.
 - RO-Crate 1.2.
+- BagIt, RFC 8493, section 4 (serialization).
+- Frictionless discussion #911, "Data Package Bundling (and maybe
+  compression)", <https://github.com/frictionlessdata/datapackage/discussions/911>.
+- [RFC 0003](rfcs/0003-frictionless-bundling-ideas.md), the ideas OFA
+  adopted from that discussion.
 - W3C WebAssembly Core Specification 2.0.

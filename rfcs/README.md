@@ -7,3 +7,4 @@ Proposals for normative changes to the OFA specification. See
 |---|---|---|
 | [0001](0001-extension-and-media-type.md) | File extension and media type | Accepted |
 | [0002](0002-use-frictionless-data-package.md) | Use Frictionless Data Package as the manifest | Accepted |
+| [0003](0003-frictionless-bundling-ideas.md) | Adopt the Frictionless community's bundling ideas | Accepted |
