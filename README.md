@@ -4,17 +4,20 @@
 open-source, self-describing package format. Any program can open an `.ofa`
 file and read what's inside it.
 
-## Open for public comment
+## Built on Frictionless Data Package
 
-Draft 0.1 is open for public comment. Nothing is final, and we'll change the
-spec based on what you tell us. We want to hear from anyone who might read,
-write or build on OFA files.
+OFA stands on the work of the [Frictionless Data](https://frictionlessdata.io/)
+project at the Open Knowledge Foundation. The manifest inside every `.ofa`
+file is a standard [Frictionless Data Package](https://datapackage.org/)
+descriptor, `datapackage.json`, used exactly as their spec defines it.
+Frictionless had already solved how to describe a set of data files, so we
+didn't reinvent it. Any Frictionless tool can read an OFA manifest.
 
-- **Questions, ideas and general feedback:** start a thread in
-  [Discussions](https://github.com/phennessey/open-file/discussions).
-- **Something wrong, missing or unclear in the spec:** [open an
-  issue](https://github.com/phennessey/open-file/issues).
-- **A specific change to the spec:** propose it as an [RFC](rfcs/).
+What OFA adds is the part Data Package leaves open: one file that holds
+everything. OFA defines the ZIP container, the `.ofa` file type and media
+type, and a few extras (compression, roles and integrity checks) in private
+`_ofa` properties that Data Package allows.
+[RFC 0002](rfcs/0002-use-frictionless-data-package.md) has the details.
 
 ## Why this exists
 
@@ -26,10 +29,8 @@ OFA is a new philosophy. Instead of inventing a format, a tool writes an OFA
 package:
 
 - Its data goes in as ordinary files: JSON, CSV, PNG, Parquet, whatever fits.
-- A manifest, `datapackage.json`, says what each file is, how it's
-  compressed, and which schema describes it. It's a standard
-  [Frictionless Data Package](https://datapackage.org/), so existing
-  Frictionless tools can read it.
+- A Frictionless manifest, `datapackage.json`, says what each file is, how
+  it's compressed, and which schema describes it.
 - The schemas go inside the package too.
 
 Another AI-built tool can open the package and understand it. So can any
@@ -141,15 +142,8 @@ currently ends up as an undocumented ZIP or a bespoke binary.
 
 ### Frictionless and RO-Crate
 
-**[Frictionless Data Package](https://datapackage.org/)** already describes
-a set of data files well, so we use it as is. The manifest in every `.ofa`
-file is a standard `datapackage.json`, and any Frictionless tool can read
-it. What Data Package doesn't define is a single file to hold it all: no
-file type, no media type and no rules for what goes inside a ZIP. OFA adds
-that container, plus per-file compression, roles and integrity checks, in
-private `_ofa` properties that Data Package allows.
-[RFC 0002](rfcs/0002-use-frictionless-data-package.md) explains the
-details.
+**Frictionless Data Package** is OFA's foundation. See
+[Built on Frictionless Data Package](#built-on-frictionless-data-package).
 
 **[RO-Crate](https://www.researchobject.org/ro-crate/)** describes research
 data: who made it, how and why, in JSON-LD. It doesn't tell a reader how to
@@ -159,6 +153,18 @@ resource with the `metadata` role.
 
 The [survey](research/survey.md) explains what OFA borrows from each
 existing format.
+
+## Open for public comment
+
+Draft 0.2 is open for public comment. Nothing is final, and we'll change the
+spec based on what you tell us. We want to hear from anyone who might read,
+write or build on OFA files.
+
+- **Questions, ideas and general feedback:** start a thread in
+  [Discussions](https://github.com/phennessey/open-file/discussions).
+- **Something wrong, missing or unclear in the spec:** [open an
+  issue](https://github.com/phennessey/open-file/issues).
+- **A specific change to the spec:** propose it as an [RFC](rfcs/).
 
 ## License
 
