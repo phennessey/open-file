@@ -135,6 +135,23 @@ data already has a good self-describing format, put that file in a package
 and let the manifest say what it is. OFA fills the gap for everything that
 currently ends up as an undocumented ZIP or a bespoke binary.
 
+### Why not Frictionless or RO-Crate?
+
+We built on both, and OFA works alongside them.
+
+**[Frictionless Data Package](https://datapackage.org/)** is the closest
+thing to OFA. Its `datapackage.json` lists each file with a path, media type,
+hash and schema. But it's a folder layout aimed at tabular data, with no
+single-file container and no file type of its own. OFA borrows its field
+names and accepts its Table Schema, then adds the container: one `.ofa` file
+you can email, upload or archive.
+
+**[RO-Crate](https://www.researchobject.org/ro-crate/)** describes research
+data: who made it, how and why, in JSON-LD. It doesn't tell a reader how to
+decode the bytes in each file, and a reader needs JSON-LD tooling just to
+list them. OFA handles decoding. If you need RO-Crate's richer metadata, put
+`ro-crate-metadata.json` inside the package as a `metadata` stream.
+
 The [survey](research/survey.md) explains what OFA borrows from each
 existing format.
 
