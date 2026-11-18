@@ -3,6 +3,10 @@
 Thanks for helping. OFA succeeds only if many people can implement it, so
 outside reviews matter as much as code.
 
+The draft is open for public comment. You don't need to write code or an RFC
+to take part. A question or an opinion in
+[Discussions](https://github.com/phennessey/open-file/discussions) helps.
+
 ## Ways to help
 
 - **Read the spec and file issues.** Ambiguities count as bugs. If two

@@ -1,7 +1,9 @@
 # Open File Archive (OFA)
 
 - Version: **0.1.0-draft**
-- Status: Working draft. Expect breaking changes before 1.0.
+- Status: Working draft, **open for public comment**. Expect breaking changes
+  before 1.0. Comment in [Discussions](https://github.com/phennessey/open-file/discussions) or
+  [open an issue](https://github.com/phennessey/open-file/issues).
 - Media type: `application/vnd.ofa+zip`
 - Extension: `.ofa`
 - License: [CC BY 4.0](LICENSE-SPEC.md)

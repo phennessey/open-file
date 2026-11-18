@@ -4,8 +4,17 @@
 open-source, self-describing package format. Any program can open an `.ofa`
 file and read what's inside it.
 
-Status: **draft 0.1**. The spec will change. Feedback welcome through issues
-and [RFCs](rfcs/).
+## Open for public comment
+
+Draft 0.1 is open for public comment. Nothing is final, and we'll change the
+spec based on what you tell us. We want to hear from anyone who might read,
+write or build on OFA files.
+
+- **Questions, ideas and general feedback:** start a thread in
+  [Discussions](https://github.com/phennessey/open-file/discussions).
+- **Something wrong, missing or unclear in the spec:** [open an
+  issue](https://github.com/phennessey/open-file/issues).
+- **A specific change to the spec:** propose it as an [RFC](rfcs/).
 
 ## Why this exists
 
