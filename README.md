@@ -137,14 +137,17 @@ currently ends up as an undocumented ZIP or a bespoke binary.
 
 ### Why not Frictionless or RO-Crate?
 
-We built on both, and OFA works alongside them.
+We built on both.
 
 **[Frictionless Data Package](https://datapackage.org/)** is the closest
-thing to OFA. Its `datapackage.json` lists each file with a path, media type,
-hash and schema. But it's a folder layout aimed at tabular data, with no
-single-file container and no file type of its own. OFA borrows its field
-names and accepts its Table Schema, then adds the container: one `.ofa` file
-you can email, upload or archive.
+thing to OFA, and the two overlap. Its `datapackage.json` lists each file
+with a path, media type, hash and schema, as `ofa.json` does. Frictionless
+tools can zip a package, but the standard doesn't define that ZIP: there's no
+file type, no media type and no rules for what goes inside. OFA defines the
+container, and adds per-file compression, roles and integrity checks. It
+borrows Frictionless field names and accepts its Table Schema. We're asking
+the Frictionless community whether OFA should become a container profile for
+Data Package rather than a separate descriptor.
 
 **[RO-Crate](https://www.researchobject.org/ro-crate/)** describes research
 data: who made it, how and why, in JSON-LD. It doesn't tell a reader how to
