@@ -100,7 +100,7 @@ Build your own from a folder containing a `ofa.json` template:
 python3 tools/ofa.py pack examples/src/sensor-log my-log.ofa
 ```
 
-No tool at all? It is a ZIP file:
+No tool at all? Not a problem — it's just a ZIP file:
 
 ```bash
 unzip -p examples/sensor-log.ofa ofa.json
